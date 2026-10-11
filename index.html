@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#140c1c">
-<title>Intercity Pixel Train</title>
+<title>CU Pixel Shuttle</title>
 <style>
   html, body { margin: 0; height: 100%; background: #140c1c; overflow: hidden; }
   body {
@@ -53,7 +53,6 @@
   <button id="b-engine" type="button" class="drv" hidden aria-label="Start the engine" title="Engine start / stop (E)"><svg viewBox="0 0 16 16"><path d="M7 1h2v7H7zM4 3h2v2H4zM10 3h2v2h-2zM2 5h2v6H2zM12 5h2v6h-2zM3 11h2v2H3zM11 11h2v2h-2zM5 13h6v1H5z"/></svg><span>START</span></button>
   <button id="b-power" type="button" class="drv" hidden aria-label="Power: notch up" title="Power up / release brake (Up arrow)"><svg viewBox="0 0 16 16"><path d="M7 3h2v1h1v1h1v1h1v1h1v1h1v2H2V8h1V7h1V6h1V5h1V4h1z"/></svg><span>POWER</span></button>
   <button id="b-brake" type="button" class="drv" hidden aria-label="Brake: notch down" title="Power down / brake (Down arrow, B = emergency)"><svg viewBox="0 0 16 16"><path d="M2 5h12v2h-1v1h-1v1h-1v1h-1v1H9v1H7v-1H6v-1H5V9H4V8H3V7H2z"/></svg><span>BRAKE</span></button>
-  <button id="b-doors" type="button" class="drv" hidden aria-label="Open the doors" title="Doors (O)"><svg viewBox="0 0 16 16"><path d="M2 2h12v12H2zM4 4v10h3V4zM9 4v10h3V4z"/></svg><span>OPEN</span></button>
   <button id="b-horn" type="button" class="drv" hidden aria-label="Horn" title="Horn (hold H)"><svg viewBox="0 0 16 16"><path d="M1 7h3v2H1zM4 6h2v4H4zM6 5h2v6H6zM8 3h2v10H8zM12 4h1v1h-1zM13 7h2v2h-2zM12 11h1v1h-1z"/></svg><span>HORN</span></button>
   <button id="b-light" type="button" class="drv" hidden aria-label="Headlight" title="Headlight (L)"><svg viewBox="0 0 16 16"><path d="M6 2h4v1h1v1h1v4h-1v1h-1v2H6V9H5V8H4V4h1V3h1zM6 12h4v1H6zM7 14h2v1H7z"/></svg><span>LIGHT</span></button>
   <button id="b-pause" type="button" aria-label="Pause" title="Pause (P)"><svg viewBox="0 0 16 16"></svg><span>PAUSE</span></button>
@@ -79,13 +78,13 @@ const CONFIG = {
   CRUISE_SPEED: 80,                     // world px per second
   ACCEL_TIME: 7,                        // s, 0 -> cruise
   BRAKE_TIME: 6,                        // s, cruise -> 0 (nominal)
-  PX_PER_KM: 20,                        // route km -> world px (compressed)
+  PX_PER_KM: 700,                        // route km -> world px (compressed)
   TERRAIN_BLEND: 300,                   // world px over which one landscape fades into the next
 
   // station stop sequence (seconds)
   SETTLE_TIME: 0.8,                     // brakes settle before doors open
   DOOR_TIME: 0.7,                       // doors slide open / closed
-  BOARD_TIMEOUT: 18,                    // safety cap on the boarding phase
+  BOARD_TIMEOUT: 26,                    // safety cap on the boarding phase
   FLAG_TIME: 2.2,                       // guard waves the green flag
   HORN_TIME: 1.6,                       // horn, then depart
 
@@ -105,7 +104,7 @@ const CONFIG = {
   },
 
   // time of day follows the trip: early morning at Kamalapur, night at Sylhet
-  HOUR_START: 5.6, HOUR_END: 20.4,
+  HOUR_START: 7.25, HOUR_END: 8.25,
   HOUR_EASE: 3,                         // max game hours per second when time jumps (skip, T)
 
   // weather: light monsoon spells (seeded, so every trip gets the same ones)
@@ -137,19 +136,31 @@ const CONFIG = {
 //             landscape along the line itself comes from TERRAIN below)
 //   extras    station-specific props / characters ('porter', 'fish', 'chests')
 const ROUTE = [
-  { en: 'KAMALAPUR', bn: 'কমলাপুর', code: 'DHK', km: 0,
-    platform: [-330, 650], roof: 'umbrella', crowd: 15, alight: 0, idle: 14,
-    backdrop: ['city'], extras: ['porter'] },
-  { en: 'BHAIRAB BAZAR', bn: 'ভৈরব বাজার', code: 'BRB', km: 82,
-    platform: [-90, 400], roof: 'canopy', roofColor: 'red', crowd: 6, alight: 4, idle: 4,
-    extras: ['fish'] },
-  { en: 'SRIMANGAL', bn: 'শ্রীমঙ্গল', code: 'SMG', km: 234,
-    platform: [4, 318], roof: 'shelter', crowd: 2, alight: 2, idle: 1 },
-  { en: 'KULAURA JN.', bn: 'কুলাউড়া জংশন', code: 'KUL', km: 272,
-    roof: 'canopy', roofColor: 'blue', crowd: 5, alight: 3, idle: 3,
-    extras: ['chests'] },                                  // tea chests from the gardens around
-  { en: 'SYLHET', bn: 'সিলেট', code: 'SYL', km: 319,
-    platform: [-60, 380], roof: 'canopy', crowd: 0, alight: 12, idle: 2 },
+  // km = distance from Bottoli along the line (whole-km figures from rail station listings; Dewanhat is an estimate)
+  { en: 'BOTTOLI', bn: 'বটতলী', code: 'BTL', km: 0,
+    platform: [-330, 650], roof: 'shed', roofColor: 'rust', oldSlab: true, crowd: 44, alight: 0, idle: 10,
+    backdrop: ['city', 'bottoli'], extras: ['porter'] },
+  { en: 'DEWANHAT', bn: 'দেওয়ানহাট', code: 'DWH', km: 2,           // only a stoppage: no platform, no roof, nothing
+    platform: [-40, 360], roof: 'shelter', halt: true, crowd: [0, 2], alight: 1, idle: 0 },
+  { en: 'JHAWTOLA', bn: 'ঝাউতলা', code: 'JHT', km: 5,
+    platform: [-40, 360], roof: 'shelter', noRoof: true, crowd: 16, alight: 6, idle: 2,   // a solid station building, but no shed over the platform
+    backdrop: ['jhawtola'] },
+  { en: 'POLYTECHNIC', bn: 'পলিটেকনিক', code: 'PLT', km: 6,
+    platform: [4, 318], roof: 'shelter', bare: true, crowd: [0, 2], alight: 1, idle: 0 },     // just the platform: nothing on it, no shed
+  { en: 'SHOLOSOHOR', bn: 'ষোলশহর', code: 'SLS', km: 8,
+    platform: [-90, 420], roof: 'canopy', roofColor: 'blue', crowd: 78, alight: 8, idle: 4,
+    backdrop: ['sholoshahar'] },
+  { en: 'CANTONMENT', bn: 'ক্যান্টনমেন্ট', code: 'CNT', km: 14,
+    platform: [-40, 360], roof: 'canopy', roofColor: 'green', crowd: 16, alight: 8, idle: 2,
+    backdrop: ['cantt'], extras: ['army'] },       // an army train stands behind ours, with guards
+  { en: 'CHOUDHURY HAT', bn: 'চৌধুরীহাট', code: 'CDH', km: 17,
+    platform: [-40, 360], roof: 'shelter', halt: true, green: true, crowd: 7, alight: 4, idle: 1 },   // a stoppage in the greenery, like Dewanhat
+  { en: 'FOTEYABAD', bn: 'ফতেয়াবাদ', code: 'FTB', km: 19,
+    platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 8, alight: 5, idle: 2,     // a better Jhawtola: red brick, no shed
+    backdrop: ['foteyabad'] },
+  { en: 'CHITTAGONG UNIV.', bn: 'চট্টগ্রাম বিশ্ববিদ্যালয়', code: 'CU', km: 22,
+    platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 0, alight: 40, idle: 2,
+    backdrop: ['cu'], extras: ['shops', 'vendors'] },
 ];
 const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'green',
                            crowd: 4, alight: 3, idle: 3, backdrop: [], extras: [] };
@@ -159,14 +170,17 @@ const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'gre
 // cross-fade over CONFIG.TERRAIN_BLEND px. What a section paints and spawns
 // in the far, mid and foreground layers is defined in SECTIONS.
 const TERRAIN = [
-  { id: 'village' },                      // Kamalapur onwards: paddy, ponds, tin roofs
-  { id: 'river', at: [1, -260] },         // the Meghna at Bhairab, and the bridge
-  { id: 'kash',  at: [1, 1640] },         // sandy chars white with kash phool
-  { id: 'tea',   at: [2, -420] },         // Srimangal and Kulaura tea gardens
-  { id: 'hills', at: [3, 200] },          // misty hills on the approach to Sylhet
+  { id: 'slum' },                         // the city: small buildings, houses and slums
+  { id: 'closed', at: [1, 1000] },        // closed-up terraces right up to the line
+  { id: 'slum',   at: [2, 150] },
+  { id: 'closed', at: [3, 100] },
+  { id: 'slum',   at: [4, -500] },
+  { id: 'mill',   at: [4, 1500] },        // the huge jute mill, midway to Cantonment
+  { id: 'cantt',  at: [4, 2900] },        // greenery inside the cantonment, through its station
+  { id: 'village', at: [5, 500] },        // paddy, ponds and tin roofs beyond
 ];
 // Steel truss railway bridge over the Meghna, just past Bhairab Bazar
-const BRIDGE = { at: [1, 600], spans: 6, span: 120 };
+const BRIDGE = { at: [1, 600], spans: 0, span: 120 };   // no Meghna bridge on this line
 
 // Scroll speed of each parallax layer relative to the track
 const PARALLAX = { clouds: 0.05, far: 0.2, mid: 0.5, track: 1.0, fg: 1.3 };
@@ -511,6 +525,7 @@ function buildLoco(p, lit) {
   rect(g, 42, 24, 4, 1, p.grayDark);
   rect(g, 43, 25, 4, 1, p.grayDark);
   rect(g, 44, 26, 3, 1, p.ink);
+  weatherTrain(g, p, mulberry32(7), 44, 6, 21);
   return c;
 }
 
@@ -561,7 +576,21 @@ function buildCar(p, lit, seed) {
   rect(g, 1, 16, w - 2, 1, p.grayDark);
   rect(g, 2, 17, w - 4, 1, p.ink);
   rect(g, 17, 17, 5, 2, p.grayDark);
+  for (let i = 0; i < 5; i++) rect(g, 8 + i * 5 + 1, 5, 1, 3, p.ink);              // window bars
+  weatherTrain(g, p, rng, w, 3, 15);
   return c;
+}
+
+// Years of service: faded patches, rust, streaks running down from the rivets
+function weatherTrain(g, p, rng, w, y0, y1) {
+  for (let i = 0; i < w * 1.3; i++) {
+    const r = rng(), x = randInt(rng, 0, w - 1), y = randInt(rng, y0, y1);
+    px(g, x, y, r < 0.4 ? p.rust : r < 0.7 ? p.grayDark : p.brownDark);
+  }
+  for (let k = 0; k < Math.floor(w / 9); k++) {
+    const x = randInt(rng, 2, w - 3), y = randInt(rng, y0 + 4, y1 - 3);
+    for (let j = 0, n = randInt(rng, 2, 5); j < n; j++) px(g, x, y + j, p.rust);
+  }
 }
 function drawBogie(g, p, a, b) {
   rect(g, a - 3, 143, b - a + 7, 1, p.gray);          // side frame
@@ -610,6 +639,17 @@ function drawDoors(g, v) {
     if (k < 4) rect(g, dx + k, PLAT.DOOR_TOP, 1, PLAT.DOOR_FLOOR - PLAT.DOOR_TOP + 1, p.greenDark);
     if (k >= 3) rect(g, dx, 138, 4, 1, p.grayLight);                    // folding step
   }
+  if (sim.riders)                                        // students standing in the open doorways
+    for (let i = 0; i < DOORS.length; i++) {
+      const d = sim.riders[i];
+      if (!d) continue;
+      g.save();
+      g.beginPath();
+      g.rect(DOORS[i], PLAT.DOOR_TOP, 4, PLAT.DOOR_FLOOR - PLAT.DOOR_TOP + 1);
+      g.clip();
+      g.drawImage(personSprite(v, d, 0, 1), DOORS[i] + 2 - PERSON_CX, PLAT.DOOR_FLOOR - PERSON_FY);
+      g.restore();
+    }
 }
 
 function drawHornWaves(g, p) {
@@ -1307,6 +1347,30 @@ const SECTIONS = {
     mid: { spawn: villageMid, column: paddyColumn, ground: paddyGround },
     fg:  { spawn: villageFg, column: villageFgColumn, ground: villageFgGround, hl: villageFgHl },
   },
+  mill: {
+    name: 'JUTE MILL', sky: 'normal', birds: ['hawk', 0.05],
+    far: { spawn: millFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: millMid, ground: millMidGround },
+    fg:  { spawn: slumFg, ground: slumFgGround },
+  },
+  cantt: {
+    name: 'CANTONMENT', sky: 'normal', birds: ['egret', 0.05],
+    far: { spawn: ctx => { treeLine(ctx); }, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: canttMid, ground: canttMidGround },
+    fg:  { spawn: canttFg, ground: canttFgGround },
+  },
+  closed: {
+    name: 'CITY', sky: 'normal', birds: ['hawk', 0.05],
+    far: { spawn: slumFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: ctx => slumMid(ctx, true), ground: slumMidGround },
+    fg:  { spawn: slumFg, ground: slumFgGround },
+  },
+  slum: {
+    name: 'CITY', sky: 'normal', birds: ['hawk', 0.05],
+    far: { spawn: slumFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: slumMid, ground: slumMidGround },
+    fg:  { spawn: slumFg, ground: slumFgGround },
+  },
   river: {
     name: 'MEGHNA', sky: 'normal', birds: ['gull', 0.4],
     far: {
@@ -1575,6 +1639,272 @@ function villageFgHl(c, y, lx) {
 }
 
 // --- 2. Meghna river ------------------------------------------------------
+// --- 0. the city: small buildings, houses and slums ---------------------------
+const SLUM_WALLS = ['tan', 'cream', 'brown', 'rust', 'grayLight', 'skyMid', 'paddy', 'rose'];
+const SLUM_ROOFS = ['grayLight', 'grayLight', 'rust', 'rust', 'blue', 'gray'];
+
+// A one-room shack: plank walls, a door, a sloping tin roof weighed down with bricks
+function slumShack(g, p, lit, x, base, w, h, wall, roofKey, lamp) {
+  rect(g, x, base - h, w, h, p[wall]);
+  ditherRect(g, x, base - h, w, h, p.brown, 3);
+  rect(g, x + 1, base - 5, 2, 5, p.brownDark);
+  if (w > 9) rect(g, x + w - 4, base - 6, 2, 2, lamp ? PALETTE.glow : p.ink);
+  rect(g, x - 1, base - h - 2, w + 2, 2, p[roofKey]);
+  for (let xx = x - 1; xx < x + w + 1; xx += 2) px(g, xx, base - h - 2, p.grayDark);
+  rect(g, x - 1, base - h - 3, w + 2, 1, p.grayDark);
+  if (w > 10) { rect(g, x + 3, base - h - 4, 2, 1, p.brownDark); px(g, x + w - 3, base - h - 4, p.brownDark); }
+}
+
+// A small concrete-and-brick block of one to three floors; extra: 1 water tank, 2 antenna, 3 washing line
+function slumBlock(g, p, lit, x, base, w, floors, wall, lamps, extra) {
+  const fh = 7, h = floors * fh + 2;
+  rect(g, x, base - h, w, h, p[wall]);
+  ditherRect(g, x + w - 3, base - h, 3, h, p.grayDark, 6);
+  rect(g, x - 1, base - h - 1, w + 2, 2, p.grayLight);
+  for (let f = 0; f < floors; f++)
+    for (let wx = x + 2; wx + 2 <= x + w - 2; wx += 5)
+      rect(g, wx, base - h + 2 + f * fh, 2, 3, lit && lamps[f * 6 + (((wx - x) / 5) | 0)] ? PALETTE.glow : p.indigo);
+  rect(g, x + 1, base - 4, 2, 4, p.brownDark);
+  if (extra === 1) { rect(g, x + 2, base - h - 4, 4, 3, p.blue); px(g, x + 2, base - h - 4, p.skyLight); }
+  else if (extra === 2) { rect(g, x + w - 4, base - h - 6, 1, 5, p.grayDark); rect(g, x + w - 6, base - h - 6, 4, 1, p.grayDark); }
+  else if (extra === 3) {
+    const cols = ['red', 'white', 'skyMid', 'paddy'];
+    for (let i = 0; i < w - 3; i += 2) { const k = p[cols[(i >> 1) % 4]]; px(g, x + 1 + i, base - h - 3, k); px(g, x + 1 + i, base - h - 2, k); }
+  }
+}
+
+function slumFar(ctx) {                                  // a dense low skyline in the haze
+  const { rng } = ctx, base = 52;
+  for (let x = ctx.from; x < ctx.to; ) {
+    const w = randInt(rng, 5, 14), h = rng() < 0.1 ? randInt(rng, 20, 28) : randInt(rng, 6, 15), tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx, tx + w, 0, (g, p, lit, ox) => {
+      rect(g, tx + ox, base - h, w, h, p.haze);
+      if (h > 12) ditherRect(g, tx + ox + 1, base - h + 2, w - 2, h - 3, p.slate, 3);
+    });
+    x += w + randInt(rng, 0, 2);
+  }
+  treeLine(ctx);
+}
+
+function slumMid(ctx, dense) {                           // roofs packed shoulder to shoulder, two rows deep; dense: closed-up terraces
+  const { rng, L } = ctx, G = 34;
+  for (let row = 0; row < 2; row++)
+    for (let x = ctx.from + randInt(rng, 0, 8); x < ctx.to; ) {
+      const base = G + 2 + (row ? randInt(rng, 6, 13) : randInt(rng, 0, 3)), kind = rng(), tx = x;
+      let w;
+      if (kind < (dense ? 0.08 : 0.5)) {                 // tin-roofed shack
+        w = randInt(rng, 8, 14);
+        const h = randInt(rng, 6, 9), wall = pick(rng, SLUM_WALLS), roofKey = pick(rng, SLUM_ROOFS), lamp = rng() < 0.5;
+        if (ctx.ok(tx)) ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumShack(g, p, lit, tx + ox, base, w, h, wall, roofKey, lamp));
+      } else if (kind < (dense ? 0.94 : 0.8)) {          // small brick block
+        w = dense ? randInt(rng, 14, 26) : randInt(rng, 12, 22);
+        const floors = dense ? (row ? randInt(rng, 2, 4) : randInt(rng, 3, 5)) : (row ? randInt(rng, 1, 2) : randInt(rng, 2, 3));
+        const extra = randInt(rng, 0, 3), wall = pick(rng, ['cream', 'tan', 'grayLight', 'paddy', 'rust', 'skyLight', 'rose']);
+        const lamps = Array.from({ length: floors * 6 }, () => rng() < 0.45);
+        if (ctx.ok(tx)) ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumBlock(g, p, lit, tx + ox, base, w, floors, wall, lamps, extra));
+      } else if (kind < (dense ? 0.97 : 0.93)) {         // bamboo-and-tin house, as in the villages
+        w = randInt(rng, 10, 16);
+        const tin = rng() < 0.85, on = rng() < 0.6;
+        if (ctx.ok(tx)) ctx.stat(tx - 2, tx + w + 3, base, (g, p, lit, ox) => house(g, tx + ox, base, w, p, tin, lit && on, 0));
+      } else {                                           // a palm or banana between the roofs
+        w = 6;
+        const palm = rng() < 0.5, h = randInt(rng, 13, 19), lean = randInt(rng, -2, 2);
+        if (ctx.ok(tx)) ctx.live(palm ? swayer(L, tx + 3, base, 'coco', h, lean) : swayer(L, tx + 3, base, 'banana'));
+      }
+      x += w + (dense ? -randInt(rng, 0, 1) : randInt(rng, -1, 3));
+    }
+}
+
+function slumFg(ctx) {                                   // a dirt lane with rickshaws, litter and weeds
+  const { rng } = ctx;
+  for (let x = ctx.from + randInt(rng, 0, 200); x < ctx.to; ) {
+    const len = randInt(rng, 260, 520), a = x;
+    if (ctx.ok(a + (len >> 1))) for (let n = randInt(rng, 1, 2); n > 0; n--) ctx.live(rickshawEnt(a, a + len, 20, rng, rng() < 0.4));
+    x += len + randInt(rng, 60, 260);
+  }
+  for (let x = ctx.from + randInt(rng, 10, 80); x < ctx.to; x += randInt(rng, 50, 130)) {
+    const y = randInt(rng, 22, 30), tx = x, cols = ['white', 'red', 'blue', 'paddy', 'grayLight'];
+    const bits = Array.from({ length: 7 }, () => [randInt(rng, -3, 3), randInt(rng, -1, 0), pick(rng, cols)]);
+    if (ctx.ok(x)) ctx.stat(tx - 4, tx + 4, y, (g, p, lit, ox) => {
+      rect(g, tx + ox - 3, y - 1, 7, 1, p.brownDark);
+      for (const [dx, dy, k] of bits) px(g, tx + ox + dx, y + dy - 1, p[k]);
+    });
+  }
+  addTufts(ctx, 22, 13, 15);
+}
+
+function slumMidGround(c, y, lx) {
+  if (y < 34) return null;
+  if (y === 34) return bayer(lx, y) < 8 ? 'brown' : 'brownDark';
+  return hash2(lx >> 1, y) < 0.22 ? 'brownDark' : hash2(lx, y + 5) < 0.14 ? 'tan' : 'brown';
+}
+
+function slumFgGround(c, y, lx) {
+  if (y < 12) return null;
+  if (y === 12) return bayer(lx, y) < 9 ? 'tan' : 'gray';
+  if (y < 17) return hash2(lx >> 1, y) < 0.3 ? 'grayDark' : hash2(lx, y) < 0.25 ? 'gray' : hash2(lx, y + 3) < 0.2 ? 'tan' : 'brownDark';
+  if (y <= 20) return (y === 18 || y === 20) && bayer(lx, y) < 5 ? 'brown' : hash2(lx, y) < 0.05 ? 'cream' : 'tan';
+  if (hash2(lx >> 3, y >> 2) < 0.04) return 'skyMid';
+  return hash2(lx >> 1, y) < 0.24 ? 'brownDark' : hash2(lx, y + 9) < 0.12 ? 'tan' : 'brown';
+}
+
+// --- the jute mill: sawtooth sheds, a tall chimney, a water tower, a boundary wall, stacked bales
+function millShed(g, p, lit, x, base, w, h) {
+  rect(g, x, base - h, w, h, p.rust);
+  for (let y = base - h + 2; y < base - 2; y += 3) rect(g, x, y, w, 1, p.brown);                       // brick courses
+  for (let wx = x + 3; wx + 3 <= x + w - 2; wx += 7) rect(g, wx, base - h + 4, 3, 5, lit ? PALETTE.glow : p.indigo);
+  rect(g, x, base - h - 1, w, 1, p.grayLight);
+  const teeth = Math.max(2, Math.floor(w / 14));
+  for (let t = 0; t < teeth; t++) {                                                                      // sawtooth roof, glazed on the steep face
+    const tx = x + Math.floor(t * w / teeth), tw = Math.floor((t + 1) * w / teeth) - tx + x;
+    for (let i = 0; i < tw; i++) { const ht = 1 + Math.floor(i * 7 / tw); rect(g, tx + i, base - h - 1 - ht, 1, ht, i & 1 ? p.gray : p.grayLight); }
+    rect(g, tx + tw - 2, base - h - 8, 2, 7, lit ? PALETTE.glow : p.skyMid);
+  }
+}
+function millChimney(g, p, x, base, h) {                                                                 // tall tapering brick chimney
+  for (let y = 0; y < h; y++) {
+    const half = 2 + Math.floor((h - y) * 0.05);
+    rect(g, x - half, base - y - 1, half * 2 + 1, 1, y % 9 === 8 ? p.brown : p.rust);
+  }
+  rect(g, x - 3, base - h, 7, 2, p.grayDark);
+  rect(g, x - 2, base - h + 5, 5, 2, p.white); rect(g, x - 2, base - h + 9, 5, 2, p.white);
+}
+function millTower(g, p, x, base) {                                                                      // water tank on a steel frame
+  rect(g, x - 6, base - 27, 13, 1, p.grayDark);
+  rect(g, x - 5, base - 26, 11, 7, p.grayLight); rect(g, x - 5, base - 26, 11, 1, p.white); rect(g, x - 5, base - 20, 11, 1, p.gray);
+  for (const dx of [-4, 4]) rect(g, x + dx, base - 19, 1, 19, p.grayDark);
+  for (let k = 0; k < 4; k++) { px(g, x - 3 + k, base - 17 + k * 4, p.grayDark); px(g, x + 3 - k, base - 17 + k * 4, p.grayDark); }
+}
+function millBales(g, p, x, base, cols, rows) {                                                          // stacked jute bales
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols - (r >> 1); c++) {
+      const bx = x + c * 6 + (r & 1) * 3, by = base - (r + 1) * 5;
+      rect(g, bx, by, 6, 5, (c + r) & 1 ? p.tan : p.paddy);
+      rect(g, bx, by + 2, 6, 1, p.brown); px(g, bx + 5, by, p.brownDark);
+    }
+}
+function millWall(g, p, x0, x1, base) {
+  rect(g, x0, base - 7, x1 - x0, 7, p.cream);
+  rect(g, x0, base - 8, x1 - x0, 1, p.grayLight);
+  for (let x = x0 + 8; x < x1; x += 14) rect(g, x, base - 8, 2, 8, p.tan);
+  for (let x = x0; x < x1; x += 3) px(g, x, base - 9, p.grayDark);                                       // wire on top
+}
+function millGate(g, p, x, base) {
+  rect(g, x, base - 12, 3, 12, p.cream); rect(g, x + 45, base - 12, 3, 12, p.cream);
+  rect(g, x - 1, base - 13, 5, 1, p.grayLight); rect(g, x + 44, base - 13, 5, 1, p.grayLight);
+  rect(g, x + 3, base - 3, 42, 3, p.grayDark);
+  rect(g, x + 2, base - 13, 44, 9, p.white); rect(g, x + 2, base - 13, 44, 1, p.grayDark); rect(g, x + 2, base - 5, 44, 1, p.grayDark);
+  drawText(g, 'JUTE MILLS', x + 4, base - 11, p.ink);
+}
+
+function millFar(ctx) {                                  // factory roofs and chimneys in the haze
+  const { rng } = ctx, base = 52;
+  for (let x = ctx.from; x < ctx.to; ) {
+    const w = randInt(rng, 14, 36), h = randInt(rng, 8, 16), tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx, tx + w, 0, (g, p, lit, ox) => {
+      rect(g, tx + ox, base - h, w, h, p.haze);
+      for (let k = 0; k < w; k += 6) rect(g, tx + ox + k, base - h - 3, 3, 3, p.haze);
+    });
+    x += w + randInt(rng, 0, 6);
+  }
+  for (let x = ctx.from + randInt(rng, 20, 60); x < ctx.to; x += randInt(rng, 70, 130)) {
+    const h = randInt(rng, 30, 40), tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx - 2, tx + 4, 1, (g, p, lit, ox) => rect(g, tx + ox - 1, base - h, 4, h, p.haze));
+  }
+  treeLine(ctx);
+}
+
+function millMid(ctx) {
+  const { rng } = ctx, G = 34;
+  for (let x = ctx.from + randInt(rng, 6, 30); x < ctx.to; ) {          // the works: sheds, with chimneys and towers among them
+    const kind = rng(), tx = x;
+    if (kind < 0.55) {
+      const w = randInt(rng, 60, 120), h = randInt(rng, 20, 26), base = G + 3 + randInt(rng, 0, 3);
+      if (ctx.ok(tx + (w >> 1))) ctx.stat(tx, tx + w, base, (g, p, lit, ox) => millShed(g, p, lit, tx + ox, base, w, h));
+      x += w + randInt(rng, 2, 10);
+    } else if (kind < 0.8) {
+      const h = randInt(rng, 46, 58), base = G + 4;
+      if (ctx.ok(tx)) ctx.stat(tx - 7, tx + 8, base, (g, p, lit, ox) => millChimney(g, p, tx + ox, base, h));
+      x += randInt(rng, 24, 40);
+    } else {
+      const base = G + 4;
+      if (ctx.ok(tx)) ctx.stat(tx - 8, tx + 8, base, (g, p, lit, ox) => millTower(g, p, tx + ox, base));
+      x += randInt(rng, 24, 36);
+    }
+  }
+  for (let x = ctx.from; x < ctx.to; ) {                                // front: the boundary wall, bales stacked behind it, a gate
+    const len = randInt(rng, 90, 170), base = G + 13, tx = x;
+    if (ctx.ok(tx + (len >> 1))) {
+      ctx.stat(tx, tx + len, base + 1, (g, p, lit, ox) => millWall(g, p, tx + ox, tx + ox + len, base));
+      for (let bx = tx + 10; bx < tx + len - 30; bx += randInt(rng, 26, 48)) {
+        const cols = randInt(rng, 3, 5), rows = randInt(rng, 2, 4), bb = base - 1;
+        ctx.stat(bx, bx + cols * 6 + 3, bb, (g, p, lit, ox) => millBales(g, p, bx + ox, bb, cols, rows));
+      }
+    }
+    x += len;
+    const gx = x;
+    if (ctx.ok(gx)) ctx.stat(gx - 2, gx + 50, base + 1, (g, p, lit, ox) => millGate(g, p, gx + ox, base));
+    x += 48;
+  }
+}
+
+function millMidGround(c, y, lx) {
+  if (y < 34) return null;
+  if (y === 34) return bayer(lx, y) < 8 ? 'grayLight' : 'gray';
+  return hash2(lx >> 1, y) < 0.25 ? 'grayDark' : hash2(lx, y + 3) < 0.12 ? 'tan' : 'gray';
+}
+
+// --- inside the cantonment: shade trees, lawns, long white barracks, flagpoles, tarmac roads
+function canttBarracks(g, p, lit, x, base, w, roof) {
+  rect(g, x, base - 9, w, 9, p.white);
+  rect(g, x, base - 3, w, 3, p.cloudShade);
+  for (let wx = x + 4; wx + 3 <= x + w - 3; wx += 8) rect(g, wx, base - 7, 3, 4, lit ? PALETTE.glow : p.indigo);
+  rect(g, x + (w >> 1) - 2, base - 7, 4, 7, p.brown);
+  for (let r = 0; r < 4; r++) rect(g, x - 2 + r * 2, base - 10 - r, w + 4 - r * 4, 1, r === 3 ? p.grayDark : p[roof]);
+}
+function canttFlag(g, p, x, base) {
+  rect(g, x, base - 26, 1, 26, p.grayLight);
+  rect(g, x + 1, base - 26, 10, 6, p.greenDark); disc(g, x + 5, base - 23, 2, p.red);
+}
+function canttMid(ctx) {
+  const { rng, L } = ctx, G = 34;
+  for (let x = ctx.from + randInt(rng, 0, 10); x < ctx.to; x += randInt(rng, 6, 16)) {      // big shade trees, close together
+    const r = randInt(rng, 5, 9), th = randInt(rng, 3, 8), seed = randInt(rng, 1, 1e6), base = G + 1 + randInt(rng, 0, 12), tx = x, kind = rng();
+    if (!ctx.ok(tx)) continue;
+    if (kind < 0.72) ctx.stat(tx - r - 2, tx + r + 2, base, (g, p, lit, ox) => roundTree(g, tx + ox, base, r, th, p, seed));
+    else if (kind < 0.88) ctx.live(swayer(L, tx, base, 'coco', randInt(rng, 14, 20), randInt(rng, -2, 2)));
+    else ctx.live(swayer(L, tx, base, 'bamboo', randInt(rng, 12, 18), randInt(rng, 3, 5)));
+  }
+  for (let x = ctx.from + randInt(rng, 40, 120); x < ctx.to; x += randInt(rng, 140, 300)) {   // barracks
+    const w = randInt(rng, 40, 70), base = G + 6 + randInt(rng, 0, 6), tx = x, roof = pick(rng, ['rust', 'red', 'greenDark']);
+    if (ctx.ok(tx + (w >> 1))) ctx.stat(tx, tx + w, base + 4, (g, p, lit, ox) => canttBarracks(g, p, lit, tx + ox, base, w, roof));
+  }
+  for (let x = ctx.from + randInt(rng, 80, 240); x < ctx.to; x += randInt(rng, 420, 760)) {   // flagpoles
+    const base = G + 8, tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx - 1, tx + 12, base + 5, (g, p, lit, ox) => canttFlag(g, p, tx + ox, base));
+  }
+}
+function canttFg(ctx) {
+  const { rng } = ctx;
+  for (let x = ctx.from + randInt(rng, 20, 80); x < ctx.to; x += randInt(rng, 70, 160)) {     // clipped hedges along the kerb
+    const w = randInt(rng, 14, 30), tx = x, y = randInt(rng, 14, 16);
+    if (ctx.ok(tx)) ctx.stat(tx, tx + w, y, (g, p, lit, ox) => { rect(g, tx + ox, y - 4, w, 4, p.greenDark); rect(g, tx + ox, y - 4, w, 1, p.grass); });
+  }
+  addTufts(ctx, 12, 22, 30, 5);
+}
+function canttMidGround(c, y, lx) {
+  if (y < 34) return null;
+  return hash2(lx >> 1, y) < 0.25 ? 'green' : hash2(lx, y + 2) < 0.1 ? 'grassLight' : 'grass';
+}
+function canttFgGround(c, y, lx) {
+  if (y < 12) return null;
+  if (y === 12) return bayer(lx, y) < 10 ? 'grassLight' : 'grass';
+  if (y < 17) return hash2(lx >> 1, y) < 0.2 ? 'greenDark' : hash2(lx, y) < 0.12 ? 'grassLight' : 'green';
+  if (y === 17) return (lx >> 3) & 1 ? 'white' : 'grayLight';                               // painted kerb stones
+  if (y <= 20) return hash2(lx, y) < 0.08 ? 'gray' : 'grayDark';                            // tarmac
+  return hash2(lx >> 1, y) < 0.2 ? 'greenDark' : hash2(lx, y + 1) < 0.1 ? 'grassLight' : 'green';
+}
+
 function riverWater(lx, y, deep) {
   return hash2(lx >> 2, y) < 0.1 ? 'skyLight' : y > deep && bayer(lx, y) < 3 ? 'skyDeep' : 'skyMid';
 }
@@ -2075,9 +2405,158 @@ function clipBegin(g, xa, xb) {
 function drawLand(g, v, d) {
   drawTiled(g, v.poles, d, LAYER_Y.poles);
   drawTiled(g, v.track, d, LAYER_Y.track);
+  drawCrossingDecks(g, v);
+}
+
+// --- level crossings: a road crosses the line, the gates come down and traffic waits
+const VEH_KINDS = ['car', 'cng', 'rick', 'bus', 'truck', 'bike', 'cng', 'car', 'rick'];
+const VEH_COLORS = ['red', 'white', 'skyMid', 'grayLight', 'paddy', 'orange', 'blue', 'rose'];
+let CROSSINGS = null;                                  // built on first use (the stations are defined further down)
+function crossings() {
+  if (!CROSSINGS) CROSSINGS = [[1, 650], [1, 1400], [2, 330], [3, 700], [4, 560], [4, 1250], [5, -1000, ['army', 'jeep', 'army', 'car']]].map(([si, off, kinds], n) => {
+    const rng = mulberry32(5150 + n * 31), lanes = [[], []], pool = kinds || VEH_KINDS;
+    for (const lane of lanes) for (let k = randInt(rng, 1, 3); k > 0; k--)
+      lane.push({ kind: pool[Math.floor(rng() * pool.length)], col: VEH_COLORS[Math.floor(rng() * VEH_COLORS.length)] });
+    return { u: STATIONS[si].dist + off, lanes, phase: rng() * 6 };
+  });
+  return CROSSINGS;
+}
+
+// Vehicles seen from behind, queueing for the gate. w x h, feet on the bottom row
+const VEHICLES = {
+  car: { w: 13, h: 10, paint(g, p, col) {
+    rect(g, 2, 0, 9, 4, p[col]); rect(g, 3, 1, 7, 2, p.indigo);
+    rect(g, 0, 4, 13, 4, p[col]); rect(g, 0, 5, 2, 2, p.red); rect(g, 11, 5, 2, 2, p.red);
+    rect(g, 5, 6, 3, 1, p.white); rect(g, 0, 8, 13, 1, p.grayDark);
+    rect(g, 1, 9, 2, 1, p.ink); rect(g, 10, 9, 2, 1, p.ink);
+  } },
+  cng: { w: 10, h: 13, paint(g, p) {                                // green auto-rickshaw
+    rect(g, 1, 0, 8, 2, p.greenDark); rect(g, 0, 2, 10, 8, p.green);
+    rect(g, 2, 3, 6, 3, p.indigo); for (let x = 2; x < 8; x += 2) rect(g, x, 3, 1, 3, p.grayDark);
+    rect(g, 0, 8, 2, 1, p.red); rect(g, 8, 8, 2, 1, p.red); rect(g, 0, 10, 10, 1, p.greenDark);
+    rect(g, 0, 11, 2, 2, p.ink); rect(g, 8, 11, 2, 2, p.ink);
+  } },
+  rick: { w: 9, h: 15, paint(g, p, col) {                           // cycle rickshaw, hood folded
+    rect(g, 1, 0, 7, 5, p[col]); rect(g, 1, 4, 7, 1, p.ink);
+    rect(g, 3, 6, 3, 2, p.brown); rect(g, 2, 8, 5, 3, p.white);
+    rect(g, 1, 11, 7, 1, p.grayDark); rect(g, 0, 12, 1, 3, p.ink); rect(g, 8, 12, 1, 3, p.ink);
+  } },
+  bus: { w: 22, h: 18, paint(g, p, col) {
+    rect(g, 1, 0, 20, 2, p.grayLight); rect(g, 0, 2, 22, 13, p[col]);
+    rect(g, 3, 4, 16, 5, p.indigo); px(g, 3, 4, p.skyLight); rect(g, 0, 10, 22, 1, p.cream);
+    rect(g, 1, 11, 3, 2, p.red); rect(g, 18, 11, 3, 2, p.red); rect(g, 9, 12, 4, 2, p.white);
+    rect(g, 0, 15, 22, 1, p.grayDark); rect(g, 2, 16, 4, 2, p.ink); rect(g, 16, 16, 4, 2, p.ink);
+  } },
+  truck: { w: 18, h: 16, paint(g, p, col) {
+    rect(g, 0, 0, 18, 10, p[col]); rect(g, 0, 0, 18, 2, p.brown);
+    for (let x = 3; x < 18; x += 4) rect(g, x, 2, 1, 8, p.brownDark);
+    rect(g, 0, 8, 2, 2, p.red); rect(g, 16, 8, 2, 2, p.red);
+    rect(g, 0, 10, 18, 2, p.grayDark); rect(g, 1, 12, 4, 4, p.ink); rect(g, 13, 12, 4, 4, p.ink);
+  } },
+  army: { w: 18, h: 16, paint(g, p) {                                // army lorry, canvas tilt
+    rect(g, 0, 0, 18, 10, p.greenDark); for (let x = 3; x < 18; x += 5) rect(g, x, 0, 1, 10, p.green);
+    rect(g, 0, 8, 2, 2, p.red); rect(g, 16, 8, 2, 2, p.red);
+    rect(g, 0, 10, 18, 2, p.grayDark); rect(g, 1, 12, 4, 4, p.ink); rect(g, 13, 12, 4, 4, p.ink);
+  } },
+  jeep: { w: 11, h: 9, paint(g, p) {
+    rect(g, 1, 0, 9, 3, p.greenDark); rect(g, 0, 2, 11, 5, p.green); rect(g, 4, 3, 3, 3, p.ink);
+    rect(g, 0, 4, 2, 2, p.red); rect(g, 9, 4, 2, 2, p.red);
+    rect(g, 0, 7, 11, 1, p.grayDark); rect(g, 1, 7, 2, 2, p.ink); rect(g, 8, 7, 2, 2, p.ink);
+  } },
+  bike: { w: 5, h: 10, paint(g, p, col) {
+    rect(g, 1, 0, 3, 2, p.ink); rect(g, 0, 2, 5, 4, p[col]);
+    rect(g, 1, 6, 3, 1, p.grayDark); px(g, 2, 7, p.red); rect(g, 2, 7, 1, 3, p.ink);
+  } },
+};
+const vehSprite = (v, veh) => cached(v, 'veh' + veh.kind + veh.col, VEHICLES[veh.kind].w, VEHICLES[veh.kind].h,
+                                      (g, p) => VEHICLES[veh.kind].paint(g, p, veh.col));
+
+const crossingX = cr => Math.round(cr.u - Math.floor(sim.dist) + ANCHOR_X) - 17;     // left edge of the road, screen x
+function crossingClosed(cr) {                          // gates are down while the train is on or near the crossing
+  const x = crossingX(cr) + 17;
+  return x > TRAIN.vehicles[TRAIN.vehicles.length - 1].x - 70 && x < CONFIG.TRAIN_FRONT_X + 130;
+}
+
+// The road over the rails: asphalt across the ballast, rails running through it
+function drawCrossingDecks(g, v) {
+  const p = v.p;
+  for (const cr of crossings()) {
+    const x0 = crossingX(cr);
+    if (x0 > W + 6 || x0 + 36 < -6) continue;
+    rect(g, x0, 143, 34, 16, p.grayDark);
+    for (let i = 0; i < 24; i++) px(g, x0 + 1 + ((hash2(i, cr.u | 0) * 32) | 0), 144 + ((hash2(cr.u | 0, i) * 13) | 0), p.gray);
+    rect(g, x0 - 1, 143, 2, 16, p.brown); rect(g, x0 + 33, 143, 2, 16, p.brown);
+    rect(g, x0 - 1, 146, 36, 1, p.grayLight); rect(g, x0 - 1, 147, 36, 1, p.grayDark);
+    rect(g, x0 - 1, 151, 36, 1, p.grayLight); rect(g, x0 - 1, 152, 36, 1, p.grayDark);
+  }
+}
+
+// The road coming towards us, the gates, the warning lights, and the queue
+function drawCrossings(g, v) {
+  const p = v.p, t = sim.clock;
+  for (const cr of crossings()) {
+    const x0 = crossingX(cr);
+    if (x0 > W + 30 || x0 + 34 < -30) continue;
+    rect(g, x0, 158, 34, H - 158, p.grayDark);
+    rect(g, x0 - 1, 158, 1, H - 158, p.grayLight); rect(g, x0 + 34, 158, 1, H - 158, p.grayLight);
+    for (let y = 161; y < H; y += 6) rect(g, x0 + 16, y, 2, 3, p.white);
+    for (let i = 0; i < 40; i++) px(g, x0 + 1 + ((hash2(i, cr.u | 0) * 32) | 0), 158 + ((hash2(cr.u | 0, i + 50) * 22) | 0), p.gray);
+    const closed = crossingClosed(cr), on = Math.floor(t * 2 + cr.phase) % 2;
+    rect(g, x0 + 35, 148, 2, 11, p.grayDark);                                   // gate post, far side of the road
+    rect(g, x0 - 3, 146, 2, 13, p.grayDark);                                    // gate post with the warning lamps
+    if (closed) {
+      px(g, x0 - 3, 145, on ? p.red : p.ink); px(g, x0 - 2, 145, on ? p.ink : p.red);
+      for (let x = x0; x < x0 + 34; x += 6) { rect(g, x, 153, 3, 2, p.red); rect(g, x + 3, 153, 3, 2, p.white); }   // boom down
+    } else {
+      for (let y = 138; y < 154; y += 4) { rect(g, x0 - 2, y, 2, 2, p.red); rect(g, x0 - 2, y + 2, 2, 2, p.white); } // boom up
+    }
+    for (let i = 0; i < 5; i++) { px(g, x0 - 14 + i, 144 + i, p.white); px(g, x0 - 10 - i, 144 + i, p.white); }      // crossbuck sign
+    rect(g, x0 - 12, 149, 1, 9, p.grayLight);
+    if (!closed) continue;
+    cr.lanes.forEach((lane, li) => lane.forEach((veh, k) => {
+      const spr = vehSprite(v, veh), cx = x0 + (li ? 25 : 9), base = 167 + k * 9;
+      if (base - spr.height < H) g.drawImage(spr, cx - (spr.width >> 1), base - spr.height + 1);
+    }));
+  }
+}
+
+let bellT = 0;
+function crossingBell(dt) {
+  if ((bellT -= dt) > 0) return;
+  bellT = 0.42;
+  if (!audioOn()) return;
+  for (const cr of crossings()) {
+    const x = crossingX(cr) + 17;
+    if (x > -40 && x < W + 40 && crossingClosed(cr)) { tone(audio.ctx.currentTime + 0.01, 1480, 0.16, 0.025, 'triangle'); return; }
+  }
+}
+
+// Other lines run alongside ours on the near side from Bottoli until just past
+// Dewanhat, then swing away off the bottom of the picture
+const EXTRA_Y = 164;
+let EXTRA_RANGES = null;
+function extraRanges() {
+  return EXTRA_RANGES || (EXTRA_RANGES = [
+    { from: -Infinity, to: STATIONS[1].dist + 260 },                   // Bottoli's lines, gone just past Dewanhat
+    { from: STATIONS[4].dist - 1000, to: STATIONS[4].dist + 300 },     // the main line alongside at Sholosohor Junction
+  ]);
+}
+function drawExtraTracks(g, v) {
+  const cam = Math.floor(sim.dist), T = 160, tw = v.track.width;
+  for (const r of extraRanges()) {
+    const xa = r.from - cam + ANCHOR_X, xb = r.to - cam + ANCHOR_X;
+    if (xb + T <= 0 || xa - T >= W) continue;
+    const x1 = Math.min(W, Math.ceil(xb + T));
+    for (let x = Math.max(0, Math.floor(xa - T)); x < x1; x++) {
+      const dy = x < xa ? 30 * (1 - smoothstep((x - (xa - T)) / T)) : x > xb ? 30 * smoothstep((x - xb) / T) : 0;
+      if (dy >= 18) continue;
+      g.drawImage(v.track, (((x + cam) % tw) + tw) % tw, 0, 1, 20, x, EXTRA_Y + Math.round(dy), 1, 20);
+    }
+  }
 }
 
 function drawLine(g, v) {
+  if (!BRIDGE.spans) { drawLand(g, v, sim.dist); return; }
   const d = sim.dist;
   bridgeX();
   const b0 = bridgeX0, b1 = bridgeX1;
@@ -2244,6 +2723,7 @@ const ROOFS = {
   umbrella: { y0: 78, h: 14, pillarTop: 84 },            // Kamalapur's concrete umbrellas
   canopy:   { y0: 86, h: 7, pillarTop: 93, span: [30, 258] },
   shelter:  { y0: 93, h: 7, pillarTop: 100, span: [186, 266] },
+  shed:     { y0: 78, h: 7, pillarTop: 85, span: [-300, 610] },     // Bottoli's long rusty shed on iron posts
 };
 const BOARD_TOP = 93;
 
@@ -2252,19 +2732,21 @@ const STATIONS = ROUTE.map((r, index) => {
   st.dist = Math.round(st.km * CONFIG.PX_PER_KM);
   st.bnMask = textMask(st.bn, CONFIG.BN_SIZE);
   st.layout = layoutStation(st);
+  st.tight = !!(st.halt || st.extras.includes('shops'));        // people keep off the very front of the platform
   return st;
 });
 const LAST_STATION = STATIONS.length - 1;
 
 // Fixed furniture positions for one station (same in every lighting)
 function layoutStation(st) {
+  if (st.halt || st.bare) return [];
   const rng = mulberry32(900 + st.index * 77);
   const [L, R] = st.platform, items = [];
   const clear = x => x > L + 6 && x < R - 12 && (x < PLAT.STALL_X - 10 || x > PLAT.STALL_X + 36) &&
                      Math.abs(x - PLAT.BOARD_X) > 34;              // keep the name board unobstructed
   const span = ROOFS[st.roof].span || [L, R];
   // roof pillars sit mid-carriage (41 px apart), clear of every door
-  for (let x = Math.ceil((span[0] + 6) / 41) * 41; x <= span[1] - 6; x += 41) items.push({ type: 'pillar', x, y: 158 });
+  if (!st.noRoof) for (let x = Math.ceil((span[0] + 6) / 41) * 41; x <= span[1] - 6; x += 41) items.push({ type: 'pillar', x, y: 158 });
   const every = (start, step, fn) => { for (let x = start + step * Math.ceil((L - start) / step); x < R; x += step) fn(x); };
   every(30, 82, x => clear(x) && items.push({ type: 'lamp', x, y: 161 }));
   every(56, 82, x => clear(x) && clear(x + 10) && items.push({ type: 'bench', x, y: 166 }));
@@ -2272,6 +2754,8 @@ function layoutStation(st) {
   items.push({ type: 'tap', x: 256, y: 165 });
   items.push({ type: 'stall', x: PLAT.STALL_X, y: PLAT.STALL_Y });
   items.push({ type: 'board', x: PLAT.BOARD_X, y: 159 });
+  if (st.extras.includes('shops'))
+    for (let x = L + 12, k = 0; x < R - 10; x += 33, k++) items.push({ type: 'shop', key: 'shop' + ((k * 3 + 1) % 5), x, y: 179 });
   if (st.extras.includes('fish'))
     for (const [x, y] of [[228, 160], [236, 165], [246, 161], [-40, 161], [-30, 166], [346, 162], [356, 167]])
       if (clear(x)) items.push({ type: 'basket', key: 'basket' + randInt(rng, 0, 2), x, y });
@@ -2333,6 +2817,7 @@ function buildProps(p, lit) {
     }),
     stall: prop(27, 26, 0, 25, g => paintStall(g, p, lit)),
     basket0: fishBasket(p, 0), basket1: fishBasket(p, 1), basket2: fishBasket(p, 2),
+    shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4),
     // plywood tea chests, banded and stencilled, waiting for the goods train
     chests: prop(11, 10, 5, 9, g => {
       for (const [x, y, w] of [[0, 5, 11], [2, 0, 7]]) {
@@ -2345,6 +2830,26 @@ function buildProps(p, lit) {
       rect(g, 0, 9, 11, 1, p.brownDark);
     }),
   };
+}
+
+// Small station shops along the front of the platform: striped awning, a counter
+// and goods that depend on the kind (0 tea, 1 fruit, 2 snacks, 3 books, 4 cold drinks)
+function shopProp(p, lit, kind) {
+  const awn = [['red', 'cream'], ['green', 'white'], ['blue', 'cream'], ['orange', 'white'], ['purple', 'cream']][kind];
+  return prop(24, 16, 12, 15, g => {
+    rect(g, 2, 3, 20, 7, p.brownDark);
+    for (let x = 0; x < 24; x++) rect(g, x, 0, 1, 3, (x >> 1) & 1 ? p[awn[1]] : p[awn[0]]);
+    for (let x = 0; x < 24; x += 2) px(g, x, 3, p[awn[0]]);
+    rect(g, 1, 3, 1, 13, p.brown); rect(g, 22, 3, 1, 13, p.brown);
+    px(g, 12, 4, lit ? PALETTE.glow : p.cloudShade);
+    if (kind === 0) { rect(g, 4, 6, 4, 4, p.grayLight); px(g, 8, 7, p.grayLight); rect(g, 10, 8, 2, 2, p.white); rect(g, 14, 8, 2, 2, p.white); rect(g, 17, 5, 4, 5, p.skyLight); }
+    else if (kind === 1) { for (let x = 3; x < 21; x += 4) { rect(g, x, 6, 3, 3, p[['red', 'orange', 'grassLight', 'paddy'][(x >> 2) % 4]]); } }
+    else if (kind === 2) { for (let x = 3; x < 21; x += 3) { rect(g, x, 4, 2, 4, p[['red', 'blue', 'glow', 'green'][(x / 3 | 0) % 4]]); } }
+    else if (kind === 3) { for (let x = 3; x < 21; x += 2) rect(g, x, 5, 1, 5, p[['red', 'blue', 'green', 'paddy', 'purple'][(x >> 1) % 5]]); }
+    else { for (let x = 4; x < 21; x += 3) { rect(g, x, 5, 2, 5, p[['green', 'orange', 'red', 'skyMid'][(x / 3 | 0) % 4]]); px(g, x, 4, p.white); } }
+    rect(g, 2, 10, 20, 6, p.brown); rect(g, 2, 10, 20, 1, p.tan);
+    rect(g, 2, 14, 20, 1, p.brownDark);
+  });
 }
 
 // Woven basket heaped with silver fish (Bhairab is a big fish market)
@@ -2406,8 +2911,8 @@ function buildStationSprites(st, p) {
   const [L, R] = st.platform, roof = ROOFS[st.roof];
   const span = roof.span || [L, R];
   return {
-    slab: buildSlab(p, R - L, st.index),
-    roof: st.roof === 'umbrella' ? buildUmbrellaRoof(p, span[0], span[1])
+    slab: st.halt ? buildHaltGround(p, R - L, st.index, st.green) : (st.oldSlab ? buildOldSlab : buildSlab)(p, R - L, st.index),
+    roof: (st.halt || st.noRoof || st.bare) ? null : st.roof === 'umbrella' ? buildUmbrellaRoof(p, span[0], span[1])
                                  : buildTinRoof(p, span[1] - span[0], st.roofColor),
     roofX: span[0], roofY: roof.y0,
     board: buildBoard(p, st),
@@ -2416,6 +2921,27 @@ function buildStationSprites(st, p) {
 
 // Raised concrete platform seen from slightly above: coping, yellow safety
 // line along the track edge, paved surface, then the front face.
+// The old terminal's platform: red brick paving instead of concrete
+function buildOldSlab(p, w, seed) {
+  const c = buildSlab(p, w, seed), g = c.getContext('2d'), rng = mulberry32(1896 + seed);
+  rect(g, 0, 0, w, 1, p.cream);
+  for (let y = 1; y < 24; y++) {
+    if (y === 2) continue;                                   // keep the yellow safety line
+    const r = Math.floor(y / 3);
+    for (let x = 0; x < w; x++) {
+      const k = rng(), mortar = y % 3 === 0 || (x + (r & 1) * 3) % 6 === 0;
+      px(g, x, y, mortar ? p.grayLight : k < 0.18 ? p.brown : k < 0.35 ? p.tan : p.rust);
+    }
+  }
+  rect(g, 0, 24, w, 1, p.cream);
+  rect(g, 0, 25, w, 7, p.rust);
+  rect(g, 0, 29, w, 3, p.brown);
+  for (let x = 5; x < w; x += 12) rect(g, x, 25, 1, 7, p.brown);
+  rect(g, 0, 0, 1, 32, p.brownDark);
+  rect(g, w - 1, 0, 1, 32, p.brownDark);
+  return c;
+}
+
 function buildSlab(p, w, seed) {
   const rng = mulberry32(300 + seed);
   const [c, g] = makeCanvas(w, 32);                      // screen y 148..179
@@ -2454,7 +2980,7 @@ function buildUmbrellaRoof(p, L, R) {
 
 function buildTinRoof(p, w, color) {
   const [c, g] = makeCanvas(w, 7);
-  const base = p[color], dark = p[{ red: 'rust', blue: 'navy' }[color] || 'greenDark'];
+  const base = p[color], dark = p[{ red: 'rust', blue: 'navy', rust: 'brown' }[color] || 'greenDark'];
   rect(g, 1, 0, w - 2, 1, dark);
   rect(g, 0, 1, w, 4, base);
   for (let x = 1; x < w; x += 3) rect(g, x, 1, 1, 4, dark);   // corrugations
@@ -2480,7 +3006,382 @@ function buildBoard(p, st) {
 // sx is the sprite's screen x while the train stands at the station.
 const BACKDROPS = {
   city:  { layer: 'far', sx: -300, y: 62,  build: buildCity },    // Dhaka skyline
+  bottoli: { layer: 'mid', sx: -420, y: 56, build: buildBottoli }, // the old terminal and its yard
+  jhawtola: { layer: 'mid', sx: -20, y: 72, build: buildJhawtola }, // Jhawtola's station building
+  foteyabad: { layer: 'mid', sx: -5, y: 60, build: buildFoteyabad }, // Foteyabad's red-brick station
+  cu: { layer: 'mid', sx: -100, y: 60, build: buildCU },            // the university station, far side
+  sholoshahar: { layer: 'mid', sx: -5, y: 66, build: buildSholoshohor }, // the junction's station building and signal cabin
+  cantt: { layer: 'mid', sx: -420, y: 70, build: buildCantt },      // the army's yellow train and its guards
 };
+
+// Two-storey colonial station block in red brick: arcaded ground floor,
+// shuttered upper windows, a pediment with a clock, hipped slate roof
+function colonialBuilding(g, p, lit, bx, base, w) {
+  const gfTop = base - 27, ufTop = gfTop - 22, cornY = ufTop - 2, rh = 12, roofTop = cornY - rh, cx = bx + (w >> 1);
+  rect(g, bx, ufTop, w, base - ufTop, p.red);
+  for (let y = ufTop + 1; y < base - 3; y += 3) rect(g, bx, y, w, 1, p.rust);          // brick courses
+  rect(g, bx + w - 3, ufTop, 3, base - ufTop, p.rust);
+  rect(g, bx, base - 3, w, 3, p.grayLight);                              // stone plinth
+  rect(g, bx, gfTop - 1, w, 1, p.white);                                 // string course
+  rect(g, bx, gfTop, w, 1, p.rust);
+  for (let r = 0; r < rh; r++) {                                         // hipped slate roof
+    const inset = Math.floor(r * 1.3), x0 = bx - 1 + inset, rw = w + 2 - inset * 2, y = cornY - 1 - r;
+    rect(g, x0, y, rw, 1, r === rh - 1 ? p.ink : r % 2 ? p.grayDark : p.gray);
+    if (r % 2 === 0) for (let x = x0 + (r % 4); x < x0 + rw; x += 4) px(g, x, y, p.grayDark);
+  }
+  for (const x of [bx + 38, bx + w - 52]) {                              // chimneys
+    rect(g, x, roofTop - 4, 5, 10, p.red);
+    rect(g, x - 1, roofTop - 5, 7, 1, p.grayDark);
+  }
+  rect(g, bx - 1, cornY, w + 2, 2, p.white);                             // cornice
+  rect(g, bx - 1, cornY + 2, w + 2, 1, p.rust);
+  for (let r = 0; r < 9; r++) {                                          // central pediment
+    const hw = 25 - Math.floor(r * 2.6), y = cornY - 1 - r;
+    rect(g, cx - hw, y, hw * 2, 1, r === 8 ? p.white : p.red);
+    px(g, cx - hw, y, p.white); px(g, cx + hw - 1, y, p.white);
+  }
+  disc(g, cx, cornY - 4, 3, p.white);                                    // clock
+  disc(g, cx, cornY - 4, 2, lit ? PALETTE.glow : p.cream);
+  px(g, cx, cornY - 5, p.ink); px(g, cx, cornY - 4, p.ink); px(g, cx + 1, cornY - 4, p.ink);
+  const n = Math.floor((w - 8) / 12), start = bx + 4 + (((w - 8) % 12) >> 1), mid = (n - 1) >> 1;
+  const dark = lit ? PALETTE.amber : p.brownDark, ay = base - 20;
+  for (let i = 0; i < n; i++) {
+    const ax = start + i * 12;
+    if (i === mid) {                                                     // main entrance and balcony window
+      rect(g, ax - 4, ay - 3, 16, 20, p.white);
+      rect(g, ax - 2, ay - 1, 12, 18, dark);
+      rect(g, ax + 3, ay - 1, 2, 18, p.brown);
+      rect(g, ax - 2, ufTop + 4, 12, 11, lit ? PALETTE.glow : p.indigo);
+      rect(g, ax + 3, ufTop + 4, 2, 11, p.white);
+      rect(g, ax - 4, ufTop + 4, 2, 11, p.greenDark); rect(g, ax + 10, ufTop + 4, 2, 11, p.greenDark);
+      rect(g, ax - 4, ufTop + 15, 16, 1, p.white);
+      continue;
+    }
+    rect(g, ax + 2, ay, 4, 1, dark); rect(g, ax + 1, ay + 1, 6, 1, dark); rect(g, ax, ay + 2, 8, 15, dark);   // arch
+    if (lit) rect(g, ax + 1, ay + 3, 6, 1, PALETTE.glow);
+    px(g, ax + 3, ay - 1, p.white); px(g, ax + 4, ay - 1, p.white);                                          // keystone
+    const wx = ax + 2, wy = ufTop + 4;                                                                        // upstairs window
+    rect(g, wx - 1, wy - 1, 6, 1, p.white);
+    rect(g, wx, wy, 4, 11, lit ? PALETTE.glow : p.indigo);
+    if (lit) rect(g, wx, wy + 8, 4, 3, PALETTE.amber); else px(g, wx, wy, p.skyLight);
+    rect(g, wx - 2, wy, 2, 11, p.greenDark); rect(g, wx + 4, wy, 2, 11, p.greenDark);
+    rect(g, wx - 2, wy + 11, 8, 1, p.white);
+  }
+}
+
+// Bottoli, the old Chattogram terminal (1896): the red colonial building
+// across the tracks and two more trains on yard lines in front of it, a green
+// rake with its own engine right behind ours and a maroon rake one line
+// further back (only their roofs and window rows show over our train). Both
+// lines run on a gravel yard with sleepers and end at buffer stops near
+// Dewanhat. Sprite row 0 is screen y 56; screen x -420 is its left edge
+// while we stand here.
+function buildBottoli(p, lit) {
+  const W = 1500, H = 90, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1896), END = W - 72;
+  rect(g, 0, 70, W, H - 70, p.gray);                                     // yard ballast, y 126..145
+  ditherRect(g, 0, 68, W, 2, p.gray, 8);
+  for (let i = 0; i < W * 4; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 70, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  const line = wy => {                                                   // sleepers, two rails right under the wheels, a buffer stop
+    for (let x = 2; x < END; x += 8) { rect(g, x, wy + 7, 4, 3, p.brown); px(g, x, wy + 7, p.tan); }
+    rect(g, 0, wy + 7, END, 1, p.grayLight); rect(g, 0, wy + 8, END, 1, p.grayDark);
+    rect(g, END, wy + 1, 2, 9, p.grayDark); rect(g, END - 1, wy + 1, 4, 3, p.red);
+  };
+  line(68); line(79);
+  colonialBuilding(g, p, lit, L(20), 72, 262);
+  const signal = x => {                                                  // semaphore signal, arm lowered
+    rect(g, x, 28, 2, 44, p.grayDark);
+    for (let y = 34; y < 70; y += 4) px(g, x + 2, y, p.gray);
+    for (let k = 0; k < 9; k++) { px(g, x + 2 + k, 32 + k, p.red); px(g, x + 2 + k, 33 + k, p.red); }
+    px(g, x + 11, 41, p.white); rect(g, x - 2, 32, 2, 3, p.ink);
+    rect(g, x, 25, 2, 3, lit ? PALETTE.glow : p.grayDark);
+  };
+  signal(L(8)); signal(L(300));
+  const wheel = buildWheels(p)[0];
+  const rake = (hazeLevel, paint) => {                                   // one layer per rake so a haze can push it back
+    const [rc, rg] = makeCanvas(W, H);
+    paint(rg);
+    rg.globalCompositeOperation = 'source-atop';
+    ditherRect(rg, 0, 0, W, H, p.haze, hazeLevel);
+    g.drawImage(rc, 0, 0);
+  };
+  const coaches = (rg, pal, wy, x0, n, seed) => {
+    for (let i = 0; i < n; i++) {
+      const x = x0 + i * 41;
+      rg.drawImage(buildCar(pal, lit, seed + i), x, wy - 23);
+      for (const wx of [5, 13, 25, 33]) rg.drawImage(wheel, x + wx - 3, wy);
+      rect(rg, x + 2, wy - 1, 13, 1, p.gray); rect(rg, x + 24, wy - 1, 13, 1, p.gray);
+    }
+  };
+  const maroon = { ...p, green: p.rust, greenDark: p.brown }, orange = { ...p, blue: p.rust, navy: p.brown };
+  rake(5, rg => coaches(rg, maroon, 68, L(-150), 8, 20));                // the far line: a long maroon rake
+  rake(2, rg => {                                                        // the near line: engine at the head, coaches behind
+    rg.drawImage(buildLoco(orange, lit), L(272), 79 - 28);
+    for (const wx of [6, 14, 31, 39]) rg.drawImage(wheel, L(272) + wx - 3, 79);
+    coaches(rg, p, 79, L(272) - 41, 7, 30);
+  });
+  for (let x = W - 70; x < W; x++)                                       // the yard peters out
+    for (let y = 66; y < H; y++) if (bayer(x, y) < (x - (W - 70)) / 70 * 16) g.clearRect(x, y, 1, 1);
+  return c;
+}
+
+// Jhawtola: a solid two-storey station block across the tracks, cream with a blue
+// band and the name up on the roof (the platform in front has no shed)
+function buildJhawtola(p, lit) {
+  const W = 360, H = 70, [c, g] = makeCanvas(W, H), bx = 75, w = 210, base = 56, rng = mulberry32(5), cx = bx + (w >> 1), top = base - 40;
+  rect(g, 0, 56, W, H - 56, p.gray);                                       // gravel yard under it
+  ditherRect(g, 0, 54, W, 2, p.gray, 8);
+  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 56, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  rect(g, bx, top, w, 40, p.cream);
+  rect(g, bx + w - 3, top, 3, 40, p.tan);
+  for (let x = bx + 4; x < bx + w - 2; x += 30) rect(g, x, top, 2, 40, p.white);       // pilasters
+  rect(g, bx - 2, top - 1, w + 4, 3, p.white);                                          // parapet
+  rect(g, bx - 2, top + 2, w + 4, 1, p.tan);
+  rect(g, bx, top + 5, w, 3, p.blue);                                                    // blue band
+  rect(g, bx, top + 8, w, 1, p.white);
+  rect(g, bx, base - 22, w, 1, p.white);                                                 // floor line
+  rect(g, bx, base - 3, w, 3, p.grayLight);                                              // plinth
+  for (let x = bx + 10; x + 8 <= bx + w - 6; x += 15) {
+    if (Math.abs(x + 4 - cx) < 12) continue;
+    rect(g, x - 1, top + 11, 10, 1, p.white);                                            // upper windows
+    rect(g, x, top + 12, 8, 8, lit ? PALETTE.glow : p.skyMid);
+    rect(g, x + 4, top + 12, 1, 8, p.white);
+    rect(g, x - 1, top + 20, 10, 1, p.white);
+    rect(g, x, base - 19, 8, 12, lit ? PALETTE.amber : p.indigo);                        // booking windows with grilles
+    for (let gx = x + 1; gx < x + 8; gx += 2) rect(g, gx, base - 19, 1, 12, p.grayLight);
+    rect(g, x - 1, base - 20, 10, 1, p.white); rect(g, x - 1, base - 7, 10, 1, p.white);
+  }
+  rect(g, cx - 8, base - 22, 16, 19, p.white);                                           // entrance
+  rect(g, cx - 6, base - 20, 12, 17, lit ? PALETTE.amber : p.brownDark);
+  rect(g, cx - 1, base - 20, 2, 17, p.white);
+  rect(g, cx - 14, top + 11, 28, 1, p.white);                                            // balcony window over it
+  rect(g, cx - 13, top + 12, 26, 8, lit ? PALETTE.glow : p.skyMid);
+  for (let x = cx - 13 + 6; x < cx + 13; x += 7) rect(g, x, top + 12, 1, 8, p.white);
+  rect(g, cx - 14, top + 20, 28, 1, p.white);
+  rect(g, cx - 36, top - 15, 72, 14, p.white);                                           // the name on the roof
+  rect(g, cx - 35, top - 14, 70, 12, p.blue);
+  drawText2x(g, 'JHAWTOLA', cx - 31, top - 13, p.white);
+  rect(g, bx + 20, top - 6, 8, 5, p.grayLight); rect(g, bx + 21, top - 7, 6, 1, p.gray);   // water tank
+  for (let x = 0; x < 28; x++) for (let y = 52; y < H; y++) {                            // the yard peters out at both ends
+    if (bayer(x, y) < (28 - x) / 28 * 16) g.clearRect(x, y, 1, 1);
+    if (bayer(W - 1 - x, y) < (28 - x) / 28 * 16) g.clearRect(W - 1 - x, y, 1, 1);
+  }
+  return c;
+}
+
+// Sholosohor Junction: a long station building with a taller centre block, a
+// signal cabin and semaphore signals (the platform in front keeps its canopy)
+function buildSholoshohor(p, lit) {
+  const W = 420, H = 76, [c, g] = makeCanvas(W, H), rng = mulberry32(8), base = 62, bx = 50, w = 230, cx = bx + (w >> 1);
+  rect(g, 0, 62, W, H - 62, p.gray);
+  ditherRect(g, 0, 60, W, 2, p.gray, 8);
+  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 62, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  const wallTop = base - 24;
+  rect(g, bx, wallTop, w, 24, p.red);
+  for (let y = wallTop + 2; y < base - 3; y += 3) rect(g, bx, y, w, 1, p.rust);        // brick courses
+  rect(g, bx + w - 3, wallTop, 3, 24, p.rust);
+  rect(g, bx, base - 3, w, 3, p.grayLight);
+  rect(g, bx, wallTop, w, 1, p.white);
+  for (let r = 0; r < 8; r++) rect(g, bx - 2 + Math.floor(r * 1.5), wallTop - 1 - r, w + 4 - Math.floor(r * 3), 1, r === 7 ? p.ink : r % 2 ? p.grayDark : p.gray);
+  for (let x = bx + 8; x + 6 <= bx + w - 6; x += 14) {
+    if (Math.abs(x + 3 - cx) < 40) continue;
+    rect(g, x, wallTop + 5, 6, 12, lit ? PALETTE.amber : p.brownDark);
+    rect(g, x - 1, wallTop + 4, 8, 1, p.white); rect(g, x - 1, wallTop + 17, 8, 1, p.white);
+  }
+  const cw = 70, ctop = base - 46;                                          // the taller centre block
+  rect(g, cx - (cw >> 1), ctop, cw, 43, p.red);
+  for (let y = ctop + 2; y < base - 3; y += 3) rect(g, cx - (cw >> 1), y, cw, 1, p.rust);
+  rect(g, cx - (cw >> 1), ctop, 2, 43, p.white); rect(g, cx + (cw >> 1) - 2, ctop, 2, 43, p.white);
+  for (let r = 0; r < 10; r++) rect(g, cx - 38 + Math.floor(r * 3.5), ctop - 1 - r, 76 - Math.floor(r * 7), 1, r === 9 ? p.ink : r % 2 ? p.grayDark : p.gray);
+  rect(g, cx - 31, ctop + 4, 62, 9, p.white);
+  drawText(g, 'SHOLOSOHOR JN', cx - 26, ctop + 6, p.ink);
+  for (const wx of [cx - 25, cx - 3, cx + 19]) {
+    rect(g, wx, ctop + 17, 6, 10, lit ? PALETTE.glow : p.indigo); rect(g, wx - 1, ctop + 16, 8, 1, p.white); rect(g, wx - 1, ctop + 27, 8, 1, p.white);
+  }
+  rect(g, cx - 7, base - 20, 14, 17, lit ? PALETTE.amber : p.brownDark); rect(g, cx - 8, base - 21, 16, 1, p.white);   // entrance
+  const sx = bx + w + 18, cabTop = base - 24;                                // signal cabin
+  rect(g, sx, base - 12, 18, 12, p.rust);
+  for (let y = base - 10; y < base; y += 3) rect(g, sx, y, 18, 1, p.brown);
+  rect(g, sx - 1, cabTop + 2, 20, 10, p.white);
+  for (let x = sx + 1; x < sx + 17; x += 5) rect(g, x, cabTop + 4, 4, 6, lit ? PALETTE.glow : p.skyMid);
+  for (let r = 0; r < 3; r++) rect(g, sx - 2 + r * 2, cabTop + 1 - r, 22 - r * 4, 1, p.grayDark);
+  for (let k = 0; k < 9; k++) px(g, sx - 9 + k, base - 12 + k + 3, p.grayLight);       // steps up to the cabin
+  const signal = (x, up) => {
+    rect(g, x, 20, 2, 42, p.grayDark);
+    for (let y = 26; y < 60; y += 4) px(g, x + 2, y, p.gray);
+    for (let k = 0; k < 9; k++) { px(g, x + 2 + k, up ? 28 - (k >> 1) : 26 + k, p.red); px(g, x + 2 + k, up ? 29 - (k >> 1) : 27 + k, p.red); }
+    rect(g, x, 17, 2, 3, lit ? PALETTE.glow : p.grayDark);
+  };
+  signal(bx - 26, false); signal(sx + 40, true);
+  for (let x = 0; x < 28; x++) for (let y = 58; y < H; y++) {
+    if (bayer(x, y) < (28 - x) / 28 * 16) g.clearRect(x, y, 1, 1);
+    if (bayer(W - 1 - x, y) < (28 - x) / 28 * 16) g.clearRect(W - 1 - x, y, 1, 1);
+  }
+  return c;
+}
+
+// Cantonment: another train stands on the line behind ours, a rake of yellow
+// coaches with no engine, soldiers guarding it, a buffer stop and a sentry post
+// at its end. Row 0 is screen y 70; screen x -420 is the left edge at the stop.
+function buildCantt(p, lit) {
+  const W = 1100, H = 64, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1971), END = L(300);
+  rect(g, 0, 48, END + 40, 12, p.gray);                                       // gravel bed, y 118..129
+  ditherRect(g, 0, 46, END + 40, 2, p.gray, 8);
+  for (let i = 0; i < END * 3; i++) px(g, randInt(rng, 0, END + 39), randInt(rng, 48, 59), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  for (let x = 2; x < END; x += 8) { rect(g, x, 49, 4, 3, p.brown); px(g, x, 49, p.tan); }
+  rect(g, 0, 49, END, 1, p.grayLight); rect(g, 0, 50, END, 1, p.grayDark);
+  const wheel = buildWheels(p)[0], yellow = { ...p, green: p.glow, greenDark: p.amber, cream: p.glow, red: p.amber };
+  for (let i = 0; i < 14; i++) {                                              // fourteen yellow coaches, no locomotive
+    const x = L(-276) + i * 41;
+    g.drawImage(buildCar(yellow, lit, 40 + i), x, 19);
+    for (const wx of [5, 13, 25, 33]) g.drawImage(wheel, x + wx - 3, 42);
+    rect(g, x + 2, 41, 13, 1, p.gray); rect(g, x + 24, 41, 13, 1, p.gray);
+  }
+  rect(g, END, 38, 2, 12, p.grayDark); rect(g, END - 1, 38, 4, 4, p.red);      // buffer stop
+  const [pc, pg] = makeCanvas(PERSON_W, PERSON_H), [fc, fg] = makeCanvas(PERSON_W, PERSON_H);
+  const soldier = (x, flip, fy = 51) => {                                              // painted standing, feet on the gravel
+    const d = makeDesign(rng, 'soldier');
+    pg.clearRect(0, 0, PERSON_W, PERSON_H); paintPerson(pg, d, p, 0);
+    fg.clearRect(0, 0, PERSON_W, PERSON_H); fg.save(); fg.translate(PERSON_W, 0); fg.scale(-1, 1); fg.drawImage(pc, 0, 0); fg.restore();
+    g.drawImage(flip ? fc : pc, x - PERSON_CX, fy - PERSON_FY);
+  };
+  for (let k = 0; k < 8; k++) soldier(L(-232 + k * 70 + Math.floor(rng() * 14)), rng() < 0.5);
+  soldier(L(286), true, 52);
+  const sx = L(306);                                                          // sentry post: sandbags, a box, a flag
+  rect(g, sx, 50, 22, 4, p.tan); rect(g, sx + 2, 47, 18, 3, p.tan);
+  for (let x = sx; x < sx + 22; x += 4) px(g, x, 51, p.brown);
+  rect(g, sx + 24, 36, 11, 18, p.greenDark); rect(g, sx + 23, 35, 13, 2, p.grayDark); rect(g, sx + 26, 40, 5, 5, lit ? PALETTE.amber : p.ink);
+  rect(g, sx + 40, 24, 1, 30, p.grayLight); rect(g, sx + 41, 24, 10, 6, p.greenDark); disc(g, sx + 45, 27, 2, p.red);
+  soldier(sx + 12, false, 53);
+  for (let x = 0; x < 30; x++) for (let y = 44; y < H; y++)                     // the gravel fades out at the right end
+    if (bayer(END + 40 - 1 - x, y) < (30 - x) / 30 * 16) g.clearRect(END + 40 - 1 - x, y, 1, 1);
+  return c;
+}
+
+// Foteyabad: Jhawtola's idea done better: a big red-brick station with a columned
+// portico, a clock in the pediment, a slate roof, a signal cabin and semaphores
+// (still no shed over the platform)
+function buildFoteyabad(p, lit) {
+  const W = 420, H = 84, [c, g] = makeCanvas(W, H), rng = mulberry32(19), base = 68, bx = 40, w = 250, cx = bx + (w >> 1), wallTop = base - 30;
+  rect(g, 0, 68, W, H - 68, p.gray);
+  ditherRect(g, 0, 66, W, 2, p.gray, 8);
+  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 68, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  const dark = lit ? PALETTE.amber : p.brownDark;
+  rect(g, bx, wallTop, w, 30, p.red);
+  for (let y = wallTop + 2; y < base - 3; y += 3) rect(g, bx, y, w, 1, p.rust);
+  rect(g, bx + w - 3, wallTop, 3, 30, p.rust);
+  rect(g, bx, base - 3, w, 3, p.grayLight);
+  rect(g, bx, base - 14, w, 1, p.white);
+  rect(g, bx - 1, wallTop - 1, w + 2, 2, p.white);
+  for (let r = 0; r < 9; r++) rect(g, bx - 2 + Math.floor(r * 1.4), wallTop - 2 - r, w + 4 - Math.floor(r * 2.8), 1, r === 8 ? p.ink : r % 2 ? p.grayDark : p.gray);
+  for (let x = bx + 10; x + 8 <= bx + w - 6; x += 18) {
+    if (Math.abs(x + 4 - cx) < 46) continue;
+    rect(g, x - 1, wallTop + 4, 10, 1, p.white);
+    rect(g, x, wallTop + 5, 8, 9, lit ? PALETTE.glow : p.indigo);
+    rect(g, x - 2, wallTop + 5, 2, 9, p.greenDark); rect(g, x + 8, wallTop + 5, 2, 9, p.greenDark);
+    rect(g, x - 1, wallTop + 14, 10, 1, p.white);
+    rect(g, x + 2, base - 13, 4, 1, dark); rect(g, x + 1, base - 12, 6, 1, dark); rect(g, x, base - 11, 8, 8, dark);
+    px(g, x + 3, base - 14, p.white); px(g, x + 4, base - 14, p.white);
+  }
+  for (let r = 0; r < 10; r++) {                                              // pediment over the portico
+    const hw = 33 - Math.floor(r * 3.3), y = wallTop - 1 - r;
+    rect(g, cx - hw, y, hw * 2, 1, r === 9 ? p.white : p.red);
+    px(g, cx - hw, y, p.white); px(g, cx + hw - 1, y, p.white);
+  }
+  rect(g, cx - 33, wallTop, 66, 3, p.white);                                  // entablature
+  rect(g, cx - 31, wallTop + 3, 62, 27, p.red);
+  for (let y = wallTop + 4; y < base - 3; y += 3) rect(g, cx - 31, y, 62, 1, p.rust);
+  disc(g, cx, wallTop - 4, 3, p.white); disc(g, cx, wallTop - 4, 2, lit ? PALETTE.glow : p.cream);
+  px(g, cx, wallTop - 5, p.ink); px(g, cx, wallTop - 4, p.ink); px(g, cx + 1, wallTop - 4, p.ink);
+  for (const dx of [-27, -9, 9, 27]) { rect(g, cx + dx - 1, wallTop + 3, 3, 27, p.white); rect(g, cx + dx - 2, wallTop + 3, 5, 1, p.cloudShade); rect(g, cx + dx - 2, base - 4, 5, 1, p.cloudShade); }
+  rect(g, cx - 7, base - 24, 14, 21, p.white); rect(g, cx - 5, base - 22, 10, 19, dark); rect(g, cx, base - 22, 1, 19, p.white);   // doors
+  for (const dx of [-20, 14]) { rect(g, cx + dx, wallTop + 6, 6, 9, lit ? PALETTE.glow : p.indigo); rect(g, cx + dx - 1, wallTop + 5, 8, 1, p.white); rect(g, cx + dx - 1, wallTop + 15, 8, 1, p.white); }
+  rect(g, cx - 40, wallTop - 28, 80, 15, p.white);                            // the name on the roof
+  rect(g, cx - 39, wallTop - 27, 78, 13, p.greenDark);
+  drawText2x(g, 'FOTEYABAD', cx - 35, wallTop - 26, p.white);
+  rect(g, cx - 1, wallTop - 13, 2, 4, p.grayDark);
+  const sx = bx + w + 20, cabTop = base - 26;                                  // signal cabin
+  rect(g, sx, base - 12, 18, 12, p.red);
+  for (let y = base - 10; y < base; y += 3) rect(g, sx, y, 18, 1, p.rust);
+  rect(g, sx - 1, cabTop + 2, 20, 12, p.white);
+  for (let x = sx + 1; x < sx + 17; x += 5) rect(g, x, cabTop + 4, 4, 7, lit ? PALETTE.glow : p.skyMid);
+  for (let r = 0; r < 3; r++) rect(g, sx - 2 + r * 2, cabTop + 1 - r, 22 - r * 4, 1, p.grayDark);
+  for (let k = 0; k < 9; k++) px(g, sx - 9 + k, base - 12 + k + 3, p.grayLight);
+  const signal = (x, up) => {
+    rect(g, x, 26, 2, 42, p.grayDark);
+    for (let y = 32; y < 66; y += 4) px(g, x + 2, y, p.gray);
+    for (let k = 0; k < 9; k++) { px(g, x + 2 + k, up ? 34 - (k >> 1) : 32 + k, p.red); px(g, x + 2 + k, up ? 35 - (k >> 1) : 33 + k, p.red); }
+    rect(g, x, 23, 2, 3, lit ? PALETTE.glow : p.grayDark);
+  };
+  signal(bx - 26, true); signal(sx + 40, false);
+  for (let x = 0; x < 28; x++) for (let y = 64; y < H; y++) {
+    if (bayer(x, y) < (28 - x) / 28 * 16) g.clearRect(x, y, 1, 1);
+    if (bayer(W - 1 - x, y) < (28 - x) / 28 * 16) g.clearRect(W - 1 - x, y, 1, 1);
+  }
+  return c;
+}
+
+// The university station (one platform, two tracks): a long cream building with a
+// green roof and a taller entrance block across the tracks, the second track in
+// front of it ending at a buffer stop
+function buildCU(p, lit) {
+  const W = 520, H = 84, [c, g] = makeCanvas(W, H), rng = mulberry32(73), base = 68, bx = 70, w = 250, cx = bx + (w >> 1), wallTop = base - 26, END = W - 60;
+  rect(g, 0, 68, W, H - 68, p.gray);
+  ditherRect(g, 0, 66, W, 2, p.gray, 8);
+  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 68, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  for (let x = 2; x < END; x += 8) { rect(g, x, 71, 4, 3, p.brown); px(g, x, 71, p.tan); }       // the second track
+  rect(g, 0, 71, END, 1, p.grayLight); rect(g, 0, 72, END, 1, p.grayDark);
+  rect(g, END, 64, 2, 9, p.grayDark); rect(g, END - 1, 64, 4, 3, p.red);
+  rect(g, bx, wallTop, w, 26, p.cream);
+  rect(g, bx + w - 3, wallTop, 3, 26, p.tan);
+  rect(g, bx, base - 3, w, 3, p.grayLight);
+  rect(g, bx, wallTop, w, 2, p.green);
+  for (let r = 0; r < 7; r++) rect(g, bx - 2 + Math.floor(r * 1.5), wallTop - 1 - r, w + 4 - Math.floor(r * 3), 1, r === 6 ? p.greenDeep : r % 2 ? p.greenDark : p.green);
+  for (let x = bx + 8; x + 7 <= bx + w - 6; x += 15) {
+    if (Math.abs(x + 3 - cx) < 40) continue;
+    rect(g, x - 1, wallTop + 4, 9, 1, p.white);
+    rect(g, x, wallTop + 5, 7, 12, lit ? PALETTE.glow : p.skyMid);
+    rect(g, x + 3, wallTop + 5, 1, 12, p.white);
+    rect(g, x - 1, wallTop + 17, 9, 1, p.white);
+  }
+  const ew = 86, etop = base - 40;                                             // taller entrance block
+  rect(g, cx - (ew >> 1), etop, ew, 37, p.cream);
+  rect(g, cx - (ew >> 1) - 2, etop - 2, ew + 4, 3, p.white);
+  rect(g, cx - (ew >> 1), etop + 1, ew, 2, p.green);
+  rect(g, cx - 40, etop + 5, 80, 16, p.green); rect(g, cx - 39, etop + 6, 78, 14, p.greenDark);       // name board
+  drawText(g, 'CHITTAGONG UNIVERSITY', cx - (textWidth('CHITTAGONG UNIVERSITY') >> 1), etop + 8, p.white);
+  drawText(g, 'RAILWAY STATION', cx - (textWidth('RAILWAY STATION') >> 1), etop + 14, p.glow);
+  rect(g, cx - 10, base - 20, 20, 17, p.white); rect(g, cx - 8, base - 18, 16, 15, lit ? PALETTE.amber : p.brownDark); rect(g, cx - 1, base - 18, 2, 15, p.white);
+  for (const dx of [-30, 24]) { rect(g, cx + dx, etop + 26, 6, 8, lit ? PALETTE.glow : p.skyMid); rect(g, cx + dx - 1, etop + 25, 8, 1, p.white); }
+  for (let x = 0; x < 28; x++) for (let y = 64; y < H; y++) {
+    if (bayer(x, y) < (28 - x) / 28 * 16) g.clearRect(x, y, 1, 1);
+    if (bayer(W - 1 - x, y) < (28 - x) / 28 * 16) g.clearRect(W - 1 - x, y, 1, 1);
+  }
+  return c;
+}
+
+// An unofficial stop (Dewanhat): no platform, only gravel and trodden earth
+function buildHaltGround(p, w, seed, green) {
+  const rng = mulberry32(2000 + seed), [c, g] = makeCanvas(w, 19);
+  for (let y = 0; y < 19; y++)
+    for (let x = 0; x < w; x++) {
+      const k = rng();
+      if (green && y >= 3) {                                               // grass with a trodden path through it
+        const path = y >= 8 && y <= 15 && hash2(x >> 2, y) < 0.62;
+        px(g, x, y, path ? (k < 0.3 ? p.tan : k < 0.6 ? p.brown : p.brownDark) : k < 0.35 ? p.green : k < 0.65 ? p.grass : k < 0.85 ? p.grassLight : p.greenDark);
+        continue;
+      }
+      px(g, x, y, y < 3 ? (k < 0.5 ? p.gray : k < 0.8 ? p.grayDark : p.grayLight)
+                        : k < 0.18 ? p.brownDark : k < 0.3 ? p.tan : k < 0.34 ? p.rust : p.brown);
+    }
+  for (let x = 0; x < w; x++) if (bayer(x, 3) < 8) px(g, x, 3, p.gray);
+  for (let i = 0; i < w / 5; i++) {                                      // weeds
+    const x = randInt(rng, 0, w - 1), y = randInt(rng, 5, 17);
+    px(g, x, y, rng() < 0.5 ? p.grassLight : p.grass);
+    if (rng() < 0.5) px(g, x, y - 1, p.grass);
+  }
+  for (let i = 0; i < w / 14; i++) px(g, randInt(rng, 0, w - 1), randInt(rng, 6, 18), p[pick(rng, ['white', 'red', 'blue', 'paddy'])]);   // litter
+  return c;
+}
 
 function buildCity(p, lit) {
   const TW = 540, TH = 52, rng = mulberry32(61);
@@ -2540,7 +3441,7 @@ function drawStationFront(g, v) {
     for (let k = 0; k < sim.people.length; k++) { const q = sim.people[k]; if (q.st === i && !q.hidden) frontItems.push(q); }
     frontItems.sort(byY);
     for (let k = 0; k < frontItems.length; k++) { const it = frontItems[k]; it.d ? drawPersonAt(g, v, it, off) : drawProp(g, v, st, it, off); }
-    g.drawImage(s.roof, s.roofX + off, s.roofY);
+    if (s.roof) g.drawImage(s.roof, s.roofX + off, s.roofY);
   }
 }
 
@@ -2618,8 +3519,8 @@ const SARIS = [['red', 'glow'], ['rose', 'white'], ['orange', 'red'], ['purple',
 const KAMEEZ = [['rose', 'white', 'skyMid'], ['skyMid', 'navy', 'white'], ['paddy', 'green', 'red'],
                 ['purple', 'white', 'rose'], ['orange', 'cream', 'red'], ['green', 'white', 'glow']]; // [kameez, salwar, dupatta]
 const BAGS = ['brown', 'ink', 'red', 'navy', 'grassLight'];
-const PASSENGER_KINDS = ['lungi', 'lungi', 'trousers', 'trousers', 'trousers', 'sari', 'sari', 'kameez',
-                         'kameez', 'child', 'child', 'elder'];
+const PASSENGER_KINDS = ['trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers',
+                         'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'lungi', 'sari', 'elder', 'child'];   // mostly students
 const PERSON_W = 13, PERSON_H = 20, PERSON_CX = 6, PERSON_FY = 19;   // sprite box, centre column, feet row
 const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 
@@ -2638,11 +3539,15 @@ function makeDesign(rng, kind) {
     case 'porter':   d.top = 'red'; d.cloth = 'grayLight'; d.cloth2 = 'white'; d.carry = 'case'; break;
     case 'vendor':   d.top = 'white'; [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'tray'; break;
     case 'guard':    d.top = 'white'; d.bottom = 'navy'; break;
+    case 'soldier':  d.top = 'greenDark'; d.bottom = 'green'; d.carry = 'rifle'; break;
+    case 'hawker':   d.top = pick(rng, SHIRTS); [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'basket'; break;
   }
   if (['lungi', 'trousers', 'sari', 'kameez'].includes(kind)) {
     const r = rng();
-    if (r < 0.3) d.carry = 'bag';
-    else if (r < 0.42 && kind !== 'kameez') d.carry = kind === 'trousers' ? 'backpack' : 'bundle';
+    if (kind === 'trousers') d.carry = r < 0.72 ? 'backpack' : r < 0.84 ? 'bag' : null;         // students: mostly backpacks
+    else if (kind === 'kameez') d.carry = r < 0.42 ? 'bag' : r < 0.68 ? 'backpack' : null;       // girls: handbags, sometimes a backpack
+    else if (r < 0.3) d.carry = 'bag';
+    else if (r < 0.42) d.carry = 'bundle';
     d.bagColor = pick(rng, BAGS);
   }
   return d;
@@ -2669,16 +3574,16 @@ function paintPerson(g, d, p, frame) {
   }
 
   const sit = frame === 4, dy = sit ? 3 : 0, lean = d.kind === 'elder' && !sit ? 1 : 0;
-  const cover = d.kind === 'sari' && d.covered ? d.cloth : d.kind === 'guard' ? 'navy' : d.hair;
+  const cover = d.kind === 'sari' && d.covered ? d.cloth : d.kind === 'guard' ? 'navy' : d.kind === 'soldier' ? 'greenDeep' : d.hair;
   const longHair = d.kind === 'sari' || d.kind === 'kameez';
   // 3x3 head facing right; elders stoop forward a pixel
   R(1 + lean, dy, 3, 1, cover);
   P(1 + lean, dy + 1, cover); R(2 + lean, dy + 1, 2, 1, s);
   P(1 + lean, dy + 2, longHair ? cover : s); R(2 + lean, dy + 2, 2, 1, s);
-  if (d.kind === 'guard') P(4, 0, 'navy');                // cap peak
+  if (d.kind === 'guard' || d.kind === 'soldier') P(4, 0, d.kind === 'guard' ? 'navy' : 'greenDeep');   // cap peak
   if (d.kind === 'elder') P(3 + lean, dy + 2, 'white');   // white beard
 
-  const checked = d.kind === 'lungi' || d.kind === 'porter' || d.kind === 'vendor';
+  const checked = d.kind === 'lungi' || d.kind === 'porter' || d.kind === 'vendor' || d.kind === 'hawker';
   const lower = (x, y) => checked ? ((x + y) & 1 ? d.cloth : d.cloth2) : (d.kind === 'sari' ? d.cloth : d.bottom);
 
   if (sit) {
@@ -2709,7 +3614,7 @@ function paintPerson(g, d, p, frame) {
       R(1, 3, 3, 7, d.top);
       if (stride) { P(1, 10, d.bottom); P(3, 10, d.bottom); } else R(2, 10, 2, 1, d.bottom);
       break;
-    case 'trousers': case 'guard':
+    case 'trousers': case 'guard': case 'soldier':
       R(1, 3, 3, 4, d.top);
       R(1, 7, 3, 1, d.bottom);
       if (stride) { R(1, 8, 3, 1, d.bottom); P(1, 9, d.bottom); P(3, 9, d.bottom); P(0, 10, d.bottom); P(4, 10, d.bottom); }
@@ -2720,16 +3625,18 @@ function paintPerson(g, d, p, frame) {
       for (let y = 7; y <= 10; y++) for (let x = 1; x <= 3; x++) P(x, y, lower(x, y));
       if (stride) { P(0, 10, lower(0, 10)); P(4, 10, lower(4, 10)); }
   }
-  const shoe = d.kind === 'trousers' || d.kind === 'guard' ? 'ink' : s;
+  const shoe = d.kind === 'trousers' || d.kind === 'guard' || d.kind === 'soldier' ? 'ink' : s;
   if (stride) { P(0, 11, shoe); P(4, 11, shoe); } else { P(2, 11, shoe); P(3, 11, shoe); }
   if (shoe === 'ink') P(stride ? 5 : 4, 11, shoe);       // shoes point forward
 
   // arms and whatever they carry
   const hand = frame === 6 ? [4, 3] : frame === 5 ? [4, 5] : walk === 1 ? [4, 6] : walk === 3 ? [0, 6] : [3, 7];
   switch (d.carry) {
+    case 'rifle':    R(4, 2, 1, 9, 'ink'); P(4, 1, 'grayLight'); P(3, 6, s); break;               // rifle held upright
     case 'bag':      R(4, 7, 2, 2, d.bagColor); P(4, 6, s); break;
     case 'backpack': R(0, 3, 1, 4, d.bagColor); P(hand[0], hand[1], s); break;
     case 'bundle':   R(0, -2, 5, 2, d.bagColor); P(2, -3, d.bagColor); P(4, 0, s); P(4, 1, s); break;
+    case 'basket':   R(0, -3, 5, 3, 'tan'); R(0, -3, 5, 1, 'brown'); P(1, -4, 'red'); P(2, -4, 'paddy'); P(3, -4, 'grassLight'); P(4, 3, d.top); P(4, 2, s); P(4, 1, s); break;
     case 'case':     R(-1, -3, 6, 3, 'rust'); R(-1, -1, 6, 1, 'brownDark'); P(2, -4, 'ink');   // suitcase on the head
                      P(4, 3, d.top); P(4, 2, s); P(4, 1, s); break;
     case 'tray':     R(3, 5, 5, 1, 'tan'); P(4, 4, 'red'); P(5, 4, 'paddy'); P(6, 4, 'white'); P(3, 6, s); break;
@@ -2791,7 +3698,7 @@ function drawPersonAt(g, v, q, off) {
 // column (climbing in or out) and may run a callback when reached.
 const gone = q => { q.gone = true; };
 const nearestDoor = x => DOORS.reduce((a, b) => Math.abs(b + 2 - x) < Math.abs(a + 2 - x) ? b : a);
-const randWalkY = rng => PLAT.WALK_MIN + Math.floor(rng() * (PLAT.WALK_MAX - PLAT.WALK_MIN + 1));
+const randWalkY = (rng, halt) => PLAT.WALK_MIN + Math.floor(rng() * ((halt ? 164 : PLAT.WALK_MAX) - PLAT.WALK_MIN + 1));
 
 function spawnPerson(st, d, x, y, dir, mode) {
   const speed = d.kind === 'elder' ? 7 : d.kind === 'child' ? 13 : 11 + Math.random() * 5;
@@ -2806,26 +3713,34 @@ function populateStation(st) {
   const rng = mulberry32((Math.random() * 1e9) | 0);    // a different crowd every trip
   const [L, R] = st.platform;
   const seated = kind => { const d = makeDesign(rng, kind); d.carry = null; return d; };
-  for (let i = 0; i < st.crowd; i++)                    // waiting to board, spread along the train
-    spawnPerson(st, makeDesign(rng), 24 + rng() * 244, randWalkY(rng), rng() < 0.5 ? 1 : -1, 'wait');
+  const waiting = Array.isArray(st.crowd) ? st.crowd[0] + Math.floor(rng() * (st.crowd[1] - st.crowd[0] + 1)) : st.crowd;
+  for (let i = 0; i < waiting; i++)                    // waiting to board, spread along the train
+    spawnPerson(st, makeDesign(rng), 24 + rng() * 244, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');
   for (let i = 0; i < st.idle; i++) {                   // just standing about
     let x;
     do x = L + 10 + rng() * (R - L - 20); while (x > PLAT.STALL_X - 4 && x < PLAT.STALL_X + 34);
-    spawnPerson(st, makeDesign(rng), x, randWalkY(rng), rng() < 0.5 ? 1 : -1, 'idle');
+    spawnPerson(st, makeDesign(rng), x, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'idle');
   }
   for (const it of st.layout)                           // someone resting on a bench
     if (it.type === 'bench' && rng() < 0.5)
       spawnPerson(st, seated(pick(rng, ['lungi', 'trousers', 'sari', 'kameez', 'elder'])), it.x + 3, it.y, rng() < 0.5 ? 1 : -1, 'sit');
-  spawnPerson(st, seated(pick(rng, ['lungi', 'trousers'])), PLAT.STALL_X + 31, PLAT.STALL_Y + 2, -1, 'sip');
-  const vendor = spawnPerson(st, makeDesign(rng, 'vendor'), 60 + rng() * 150, PLAT.WALK_MAX, 1, 'patrol');
+  if (!st.halt && !st.bare) spawnPerson(st, seated(pick(rng, ['lungi', 'trousers'])), PLAT.STALL_X + 31, PLAT.STALL_Y + 2, -1, 'sip');
+  const vendor = spawnPerson(st, makeDesign(rng, 'vendor'), 60 + rng() * 150, st.tight ? 164 : PLAT.WALK_MAX, 1, 'patrol');
   vendor.ax = Math.max(L + 20, -120);
   vendor.bx = Math.min(R - 46, 440);
   vendor.speed = 9;
-  spawnPerson(st, makeDesign(rng, 'guard'), 14, 167, 1, 'guard');   // front of the platform, flag against concrete
+  spawnPerson(st, makeDesign(rng, 'guard'), 14, st.tight ? 163 : 167, 1, 'guard');   // front of the platform, flag against concrete
   if (st.extras.includes('porter')) {
     const q = spawnPerson(st, makeDesign(rng, 'porter'), 300, 169, -1, 'porterWait');   // in front of the stall
     q.d2 = { ...q.d, id: ++designId, carry: null };     // same porter, luggage delivered
   }
+  if (st.extras.includes('army'))                          // soldiers on the platform
+    for (const x of [34, 96, 214, 262]) spawnPerson(st, makeDesign(rng, 'soldier'), x, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'idle');
+  if (st.extras.includes('vendors'))                       // the platform is full of vendors and hawkers
+    for (let i = 0; i < 14; i++) {
+      const q = spawnPerson(st, makeDesign(rng, i % 3 === 0 ? 'hawker' : 'vendor'), 10 + rng() * 330, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, i % 4 === 0 ? 'idle' : 'patrol');
+      if (q.mode === 'patrol') { q.ax = 4 + rng() * 140; q.bx = q.ax + 60 + rng() * 170; q.speed = 7 + rng() * 5; }
+    }
 }
 
 // Doors are open: a few passengers step off, then the waiting ones board.
@@ -2834,13 +3749,13 @@ function populateStation(st) {
 function startBoarding(st) {
   const terminus = st.index === LAST_STATION, o = Math.round(sim.stopOffset);
   // everyone gets off at the end of the line; a driver can't deliver more than they carry
-  const alight = terminus ? Math.max(st.alight, Math.min(20, drive.pax)) : drive.on ? Math.min(st.alight, drive.pax) : st.alight;
+  const alight = terminus ? Math.max(st.alight, Math.min(40, drive.pax)) : drive.on ? Math.min(st.alight, drive.pax) : st.alight;
   for (let i = 0; i < alight; i++) {
     const door = DOORS[Math.floor(Math.random() * DOORS.length)] + o, x = door + 2;
     const q = spawnPerson(st, makeDesign(Math.random), x, PLAT.DOOR_FLOOR, x - o < 150 ? -1 : 1, 'alight');
-    const y = randWalkY(Math.random), exit = (x - o < 150 ? -24 : W + 24) + o;   // just off screen
+    const y = randWalkY(Math.random, st.tight), exit = (x - o < 150 ? -24 : W + 24) + o;   // just off screen
     q.hidden = true;
-    q.delay = i * (terminus ? 0.5 : 0.45) + Math.random() * 0.6;
+    q.delay = i * (terminus ? 0.28 : 0.4) + Math.random() * 0.6;
     q.path = [{ x, y: PLAT.EDGE_Y, clip: door, speed: 18, then: passengerOut },
               { x: x + Math.sign(exit - x) * 4, y },
               { x: exit, y, then: gone }];
@@ -2956,7 +3871,8 @@ const sim = {
   station: 0,                              // index of the last station stopped at (or passed)
   stopOffset: 0,                           // how far past the stop mark the train stands (DRIVE)
   nextStop: 0,
-  doorOpen: 0,                             // 0 closed .. 1 open
+  doorOpen: 1,                             // always open: this old local train's doors never close
+  riders: null,                            // passengers standing in the doorways
   wheelAngle: 0, swayPhase: 0, clock: 0, cloudDrift: 0,
   hour: CONFIG.HOUR_START, night: 1,       // time of day (0..24) and how dark it is (0..1)
   smokeAcc: 0, fluffAcc: 0, flyAcc: 0, sparkAcc: 0,
@@ -3005,17 +3921,16 @@ function updateStop(dt) {
   sim.phaseT += dt;
   switch (sim.stopPhase) {
     case 'SETTLE':
-      if (sim.phaseT >= CONFIG.SETTLE_TIME) setStopPhase(auto ? 'DOORS_OPEN' : 'READY');
+      if (sim.phaseT >= CONFIG.SETTLE_TIME) setStopPhase('DOORS_OPEN');
       break;
     case 'READY':                                         // the driver opens the doors
       if (auto) setStopPhase('DOORS_OPEN');
       break;
     case 'DOORS_OPEN':
-      sim.doorOpen = Math.min(1, sim.phaseT / CONFIG.DOOR_TIME);
-      if (sim.doorOpen >= 1) { startBoarding(st); setStopPhase('BOARDING'); }
+      startBoarding(st); setStopPhase('BOARDING');
       break;
     case 'BOARDING':
-      if ((sim.phaseT > 1 && boardingDone(st)) || sim.phaseT >= CONFIG.BOARD_TIMEOUT) setStopPhase(auto ? 'DOORS_CLOSE' : 'BOARDED');
+      if ((sim.phaseT > 1 && boardingDone(st)) || sim.phaseT >= CONFIG.BOARD_TIMEOUT) setStopPhase(terminus ? 'PARKED' : 'WAIT');
       break;
     case 'BOARDED':                                       // the driver closes the doors
       if (auto) setStopPhase('DOORS_CLOSE');
@@ -3058,7 +3973,8 @@ function startJourney() {
   sim.wxRng = mulberry32(1971);
   resetWeather();
   sim.hornTimer = 8;
-  sim.doorOpen = 0;
+  sim.doorOpen = 1;
+  sim.riders = DOORS.map(() => Math.random() < 0.8 ? makeDesign(Math.random, Math.random() < 0.58 ? 'trousers' : 'kameez') : null);
   arrive(0, 0);
   resetDrive();
   ui.complete = false;
@@ -3160,7 +4076,7 @@ function stopWindow(st) {
 function speedLimitAt(d) {
   const D = CONFIG.DRIVE;
   let lim = sectionWeight('tea', d) + sectionWeight('hills', d) > 0.5 ? D.LIMIT_HILLS : D.LIMIT;
-  if (d > BRIDGE.u0 - 460 && d < BRIDGE.u1 + 140) lim = Math.min(lim, D.LIMIT_BRIDGE);   // from Bhairab over the Meghna
+  if (BRIDGE.spans && d > BRIDGE.u0 - 460 && d < BRIDGE.u1 + 140) lim = Math.min(lim, D.LIMIT_BRIDGE);   // from Bhairab over the Meghna
   for (let i = 0; i < STATIONS.length; i++)
     if (d > STATIONS[i].dist - 280 && d < STATIONS[i].dist + 160) return Math.min(lim, D.LIMIT_STATION);
   return lim;
@@ -3173,7 +4089,7 @@ function resetDrive() {
   drive.lever = 0; drive.over = false;
   toasts.length = 0; popPool.n = 0;
   hornOff();
-  if (drive.on) { setEngine('OFF'); drive.rpm = 0; setStopPhase('READY'); }
+  if (drive.on) { setEngine('OFF'); drive.rpm = 0; }
 }
 
 // AUTO hands the train to the driver, or takes it back, wherever it is
@@ -3186,7 +4102,6 @@ function setDriveMode(on) {
     drive.lever = 0;
     drive.tripT = (journeyHour() - CONFIG.HOUR_START) / HOURS_PER_S;     // the clock carries on
     if (sim.state !== 'STOPPED') sim.state = 'DRIVING';
-    else if (sim.stopPhase === 'SETTLE') setStopPhase('READY');
     else if (sim.stopPhase === 'HORN') setStopPhase('CLEAR');
     toast('YOU HAVE THE CONTROLS', 'glow');
   } else {
@@ -3247,7 +4162,7 @@ function updateEngine(dt) {
       if (drive.engineT >= D.SHUTDOWN_TIME) { setEngine('OFF'); playAir(0.9, 0.07); }
       break;
     case 'ON':
-      target = drive.on ? 0.3 + 0.7 * (sim.doorOpen > 0 ? 0 : Math.max(0, drive.lever)) / D.NOTCHES
+      target = drive.on ? 0.3 + 0.7 * Math.max(0, drive.lever) / D.NOTCHES
              : sim.state === 'DEPARTING' ? 0.95 : sim.state === 'TRAVELING' ? 0.65 : sim.stopPhase === 'HORN' ? 0.6 : 0.3;
       if (target > drive.rpm) rate = 0.6;               // spools up a little faster than it winds down
       break;
@@ -3265,7 +4180,6 @@ function setLever(n) {
   else if (was < 0 && drive.lever >= 0 && sim.speed < 1) playAir(0.5, 0.04);    // brakes released
   if (drive.lever > 0 && was <= 0) {
     if (drive.engine === 'OFF' || drive.engine === 'SHUTDOWN') toast('START THE ENGINE [E]', 'amber');
-    else if (sim.doorOpen > 0) toast('CLOSE THE DOORS [O]', 'amber');
   }
 }
 
@@ -3308,7 +4222,8 @@ function updateDrive(dt) {
   const D = CONFIG.DRIVE, v = sim.speed;
   drive.tripT += dt;
   if (sim.state === 'STOPPED') updateStop(dt);
-  const power = drive.lever > 0 && drive.engine === 'ON' && sim.doorOpen === 0 && !ui.complete ? drive.lever / D.NOTCHES : 0;
+  const boarding = sim.state === 'STOPPED' && (sim.stopPhase === 'SETTLE' || sim.stopPhase === 'DOORS_OPEN' || sim.stopPhase === 'BOARDING');   // no pulling out mid-boarding
+  const power = drive.lever > 0 && drive.engine === 'ON' && !boarding && !ui.complete ? drive.lever / D.NOTCHES : 0;
   const trac = Math.min(power, Math.max(0, (drive.rpm - 0.3) / 0.7)) * D.ACCEL * Math.min(1, D.KNEE / Math.max(v, 1));
   if (sim.state === 'STOPPED') {
     drive.accel = 0;
@@ -3324,6 +4239,7 @@ function updateDrive(dt) {
   if (harsh > 0) drive.comfort = Math.max(0, drive.comfort - harsh * dt * 1.5);
   checkSpeed(dt);
   checkLine();
+  checkArrival();
 }
 
 // Pulling out of a station: anyone still waiting on the platform is left behind
@@ -3338,6 +4254,15 @@ function depart() {
   sim.stopPhase = null;
   sim.shake = Math.max(sim.shake, 0.5 + drive.lever * 0.12);   // couplings snatch
   return true;
+}
+
+function checkArrival() {                              // doors never close, so standing at the platform is enough
+  const st = STATIONS[sim.station + 1];
+  if (!st || sim.speed > 0.3) return;
+  const o = sim.dist - st.dist, w = stopWindow(st);
+  if (o < w[0] || o > w[1]) return;
+  arrive(st.index, o);
+  scoreArrival(st.index, o);
 }
 
 function checkSpeed(dt) {
@@ -3399,9 +4324,9 @@ function finishJourney() {
   const P = drive.pts, comfort = Math.round(drive.comfort * 4);
   const total = Math.round(P.stops + P.time + P.pax + comfort + P.penalty);
   const best = readBest();
-  if (total > best) try { localStorage.setItem('ipt-best', String(total)); } catch (e) { /* storage blocked */ }
+  if (total > best) try { localStorage.setItem('cups-best', String(total)); } catch (e) { /* storage blocked */ }
   drive.final = { total, comfort, best, record: total > best && best > 0,
-                  stars: total >= 3000 ? 3 : total >= 2200 ? 2 : total >= 1200 ? 1 : 0 };
+                  stars: total >= 720 * STATIONS.length ? 3 : total >= 500 * STATIONS.length ? 2 : total >= 270 * STATIONS.length ? 1 : 0 };
   playScore(true);
 }
 
@@ -3458,8 +4383,8 @@ function driveHint() {
   if (sim.state === 'STOPPED') {
     const term = sim.station === LAST_STATION;
     switch (sim.stopPhase) {
-      case 'SETTLE': case 'READY': return e === 'OFF' && sim.station === 0 ? 'START THE ENGINE [E]' : 'OPEN THE DOORS [O]';
-      case 'DOORS_OPEN': case 'BOARDING': return term ? 'PASSENGERS GETTING OFF...' : 'PASSENGERS BOARDING...';
+      case 'SETTLE': case 'READY': case 'DOORS_OPEN': case 'BOARDING':
+        return e === 'OFF' && sim.station === 0 ? 'START THE ENGINE [E]' : term ? 'PASSENGERS GETTING OFF...' : 'PASSENGERS BOARDING...';
       case 'BOARDED': return !term ? 'CLOSE THE DOORS [O]' : e === 'ON' ? 'STOP THE ENGINE [E]' : '';
       case 'DOORS_CLOSE': return 'DOORS CLOSING...';
       case 'WAIT': return 'DEPARTS AT ' + hhmm(tripHour(SCHEDULE[sim.station].dep)) + ' - WAIT';
@@ -3989,6 +4914,7 @@ function update(dt) {
   updateWeather(dt);
   trackSound(dt);
   villageHorn(dt);
+  crossingBell(dt);
 }
 
 // Now and then the driver sounds the horn passing a village
@@ -4052,7 +4978,7 @@ const STAR = ['....x....', '...xxx...', 'xxxxxxxxx', '.xxxxxxx.', '..xxxxx..', '
 let panelSprites = null;
 
 function readBest() {
-  try { return +localStorage.getItem('ipt-best') || 0; } catch (e) { return 0; }
+  try { return +localStorage.getItem('cups-best') || 0; } catch (e) { return 0; }
 }
 
 function sizePanel() {
@@ -4114,7 +5040,7 @@ function buttonHit(x, y) {
 }
 
 // --- title card: WATCH the journey or DRIVE it ------------------------------
-const TITLE = { w: 208, h: 100, y: 38, bn: textMask('ঢাকা থেকে সিলেট', CONFIG.BN_SIZE), sprite: null, best: readBest() };
+const TITLE = { w: 208, h: 100, y: 38, bn: textMask('বটতলী থেকে চবি', CONFIG.BN_SIZE), sprite: null, best: readBest() };
 const TITLE_OPTS = [['WATCH', 'SIT BACK AND ENJOY'], ['DRIVE', 'YOU ARE THE DRIVER']];
 const TITLE_HITS = TITLE_OPTS.map(() => ({ x: 0, y: 0, w: 80, h: 15 }));
 
@@ -4123,12 +5049,12 @@ function buildTitle() {
   rect(g, 0, 0, w, h, P.slate);
   rect(g, 1, 1, w - 2, h - 2, P.ink);
   rect(g, 1, h - 2, w - 2, 1, P.green);
-  const t = 'INTERCITY PIXEL TRAIN';
+  const t = 'CU PIXEL SHUTTLE';
   drawText2x(g, t, (w - t.length * 8 + 2) >> 1, 6, P.glow);
   drawMask(g, bn, (w - bn.w) >> 1, 20, P.white);
-  const route = STATIONS.map(s => s.code).join(' > ') + '   ' + STATIONS[LAST_STATION].km + ' KM';
+  const route = STATIONS.map(s => s.code).join('-') + '   ' + STATIONS[LAST_STATION].km + ' KM';
   drawText(g, route, (w - textWidth(route)) >> 1, 23 + bn.h, P.grayLight);
-  const keys = 'E ENGINE  ↑↓ LEVER  O DOORS  H HORN  L LIGHT';
+  const keys = 'E ENGINE  ↑↓ LEVER  H HORN  L LIGHT';
   drawText(g, keys, (w - textWidth(keys)) >> 1, h - 19, P.slate);
   const foot = '←→ CHOOSE   ENTER START' + (TITLE.best ? '   BEST ' + TITLE.best : '');
   drawText(g, foot, (w - textWidth(foot)) >> 1, h - 11, P.grayLight);
@@ -4577,17 +5503,20 @@ const MAP = { x: 0, y: 2, w: 150, sprite: null };
 function buildMap() {
   const w = MAP.w, h = 15, [c, g] = makeCanvas(w + 12, h);
   const d0 = STATIONS[0].dist, d1 = STATIONS[LAST_STATION].dist;
-  const SEC_COL = { village: PALETTE.grass, river: PALETTE.skyMid, kash: PALETTE.cream, tea: PALETTE.green, hills: PALETTE.haze };
+  const SEC_COL = { village: PALETTE.grass, river: PALETTE.skyMid, kash: PALETTE.cream, tea: PALETTE.green, hills: PALETTE.haze,
+                    slum: PALETTE.tan, closed: PALETTE.grayLight, mill: PALETTE.rust, cantt: PALETTE.greenDark };
   rect(g, 0, 0, w + 12, 9, PALETTE.slate);
   rect(g, 1, 1, w + 10, 7, PALETTE.ink);
   for (let i = 0; i <= w; i++) {
     const tw = terrainAt(d0 + (d1 - d0) * i / w);
     rect(g, 6 + i, 4, 1, 1, SEC_COL[TERRAIN[bayer(i, 4) < tw.t * 16 ? tw.b : tw.a].id]);
   }
+  let mapLabelEnd = -9;
   for (const st of STATIONS) {
     const x = 6 + Math.round((st.dist - d0) / (d1 - d0) * w);
     rect(g, x - 1, 3, 3, 3, PALETTE.white);
-    drawText(g, st.code || st.en.slice(0, 3), Math.max(0, Math.min(w + 12 - 11, x - 5)), 10, PALETTE.grayLight);
+    const code = st.code || st.en.slice(0, 3), lx = Math.max(0, Math.min(w + 12 - textWidth(code), x - 5));
+    if (lx > mapLabelEnd + 2) { drawText(g, code, lx, 10, PALETTE.grayLight); mapLabelEnd = lx + textWidth(code); }
   }
   MAP.x = (W - w - 12) >> 1;
   MAP.sprite = c;
@@ -4654,8 +5583,6 @@ function syncButtons() {
   set('b-engine', null, E === 'OFF' ? 'START' : E === 'ON' ? 'STOP' : '...', E === 'ON', E === 'OFF' ? 'Start the engine' : 'Stop the engine');
   set('b-power', null, null, drive.lever > 0, 'Power up, lever ' + leverLabel(drive.lever));
   set('b-brake', null, null, drive.lever < 0, 'Brake, lever ' + leverLabel(drive.lever));
-  const closing = sim.state === 'STOPPED' && (sim.stopPhase === 'BOARDING' || sim.stopPhase === 'BOARDED' || sim.stopPhase === 'DOORS_OPEN');
-  set('b-doors', null, closing ? 'CLOSE' : 'OPEN', sim.doorOpen > 0, closing ? 'Close the doors' : 'Open the doors');
   set('b-light', null, null, drive.headlight, drive.headlight ? 'Headlight off' : 'Headlight on');
 }
 
@@ -4674,11 +5601,10 @@ const actions = {
   engine() { toggleEngine(); },
   power() { setLever(drive.lever + 1); },
   brake() { setLever(drive.lever - 1); },
-  doors() { toggleDoors(); },
   light() { toggleLight(); },
 };
 for (const [id, act] of [['b-mode', 'mode'], ['b-pause', 'pause'], ['b-speed', 'speed'], ['b-skip', 'skip'], ['b-time', 'time'],
-                         ['b-rain', 'rain'], ['b-mute', 'mute'], ['b-engine', 'engine'], ['b-doors', 'doors'], ['b-light', 'light']])
+                         ['b-rain', 'rain'], ['b-mute', 'mute'], ['b-engine', 'engine'], ['b-light', 'light']])
   btn(id).addEventListener('click', () => { unlockAudio(); actions[act](); syncButtons(); });
 
 // Power and brake step once per tap and keep stepping while held; the horn
@@ -4705,7 +5631,7 @@ for (const [id, act] of [['b-power', 'power'], ['b-brake', 'brake']]) {
 
 function skipToNextStation() {
   if (ui.complete || sim.station >= LAST_STATION || drive.on) return;
-  sim.doorOpen = 0;
+  sim.doorOpen = 1;
   smokePool.n = sparkPool.n = 0;
   arrive(sim.station + 1, 0);
 }
@@ -4727,7 +5653,6 @@ function driveKey(key) {
     case 'ArrowUp': setLever(drive.lever + 1); break;
     case 'ArrowDown': setLever(drive.lever - 1); break;
     case 'KeyB': setLever(EB); break;
-    case 'KeyO': toggleDoors(); break;
     case 'KeyL': toggleLight(); break;
     case 'KeyH': break;                                  // held: see keydown
     default: return false;
@@ -4808,12 +5733,15 @@ function renderWorld(g, v) {
   drawBackdrops(g, v, 'far');                                             //    Dhaka skyline
   drawTerrain(g, v, TL.far);                                              // 3. distant land
   drawTerrain(g, v, TL.mid);                                              // 4. fields, river, hills
+  drawBackdrops(g, v, 'mid');                                             //    Bottoli's building and yard
   drawBirds(g, v);
   drawLine(g, v);                                                         // 5. poles, track, bridge
   drawTrain(g, v);
   drawSmoke(g, v);
   drawTruss(g, v, true);                                                  //    lattice over the train
   drawTerrain(g, v, TL.fg, drawReflection);                               // 6. near ground / water
+  drawExtraTracks(g, v);
+  drawCrossings(g, v);                                                  //    the other lines at Bottoli
   drawStationFront(g, v);                                                 //    platform, people
   drawFluff(g, v);
 }
