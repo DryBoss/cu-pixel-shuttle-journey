@@ -22,6 +22,9 @@
     image-rendering: pixelated;
     touch-action: manipulation;
   }
+  #stage { display: flex; flex-direction: column; align-items: center; }
+  #cab { display: none; touch-action: none; }
+  body.cabbed #cab { display: block; }
   #bar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
   body.side #bar { flex-direction: column; flex-wrap: nowrap; }
   body.overlay #bar {
@@ -47,14 +50,12 @@
 </style>
 </head>
 <body>
+<div id="stage">
 <canvas id="screen" width="320" height="180"></canvas>
+<canvas id="cab" width="320" height="96"></canvas>
+</div>
 <div id="bar" role="toolbar" aria-label="Train controls">
   <button id="b-mode" type="button" aria-label="Driver mode" title="Drive the train yourself (C)"><svg viewBox="0 0 16 16"><path d="M5 2h6v1h2v2h1v6h-1v2h-2v1H5v-1H3v-2H2V5h1V3h2zM6 4H5v1H4v6h1v1h6v-1h1V5h-1V4zM7 4h2v3H7zM7 7h2v2H7zM4 7h3v1H4zM9 7h3v1H9zM7 9h2v3H7z"/></svg><span>AUTO</span></button>
-  <button id="b-engine" type="button" class="drv" hidden aria-label="Start the engine" title="Engine start / stop (E)"><svg viewBox="0 0 16 16"><path d="M7 1h2v7H7zM4 3h2v2H4zM10 3h2v2h-2zM2 5h2v6H2zM12 5h2v6h-2zM3 11h2v2H3zM11 11h2v2h-2zM5 13h6v1H5z"/></svg><span>START</span></button>
-  <button id="b-power" type="button" class="drv" hidden aria-label="Power: notch up" title="Power up / release brake (Up arrow)"><svg viewBox="0 0 16 16"><path d="M7 3h2v1h1v1h1v1h1v1h1v1h1v2H2V8h1V7h1V6h1V5h1V4h1z"/></svg><span>POWER</span></button>
-  <button id="b-brake" type="button" class="drv" hidden aria-label="Brake: notch down" title="Power down / brake (Down arrow, B = emergency)"><svg viewBox="0 0 16 16"><path d="M2 5h12v2h-1v1h-1v1h-1v1h-1v1H9v1H7v-1H6v-1H5V9H4V8H3V7H2z"/></svg><span>BRAKE</span></button>
-  <button id="b-horn" type="button" class="drv" hidden aria-label="Horn" title="Horn (hold H)"><svg viewBox="0 0 16 16"><path d="M1 7h3v2H1zM4 6h2v4H4zM6 5h2v6H6zM8 3h2v10H8zM12 4h1v1h-1zM13 7h2v2h-2zM12 11h1v1h-1z"/></svg><span>HORN</span></button>
-  <button id="b-light" type="button" class="drv" hidden aria-label="Headlight" title="Headlight (L)"><svg viewBox="0 0 16 16"><path d="M6 2h4v1h1v1h1v4h-1v1h-1v2H6V9H5V8H4V4h1V3h1zM6 12h4v1H6zM7 14h2v1H7z"/></svg><span>LIGHT</span></button>
   <button id="b-pause" type="button" aria-label="Pause" title="Pause (P)"><svg viewBox="0 0 16 16"></svg><span>PAUSE</span></button>
   <button id="b-speed" type="button" class="big aut" aria-label="Speed 1x" title="Speed (1 / 2 / 4)">1x</button>
   <button id="b-skip" type="button" class="aut" aria-label="Skip to next station" title="Next station (N)"><svg viewBox="0 0 16 16"><path d="M3 3h2v1h2v1h2v1h1v1h1v2h-1v1h-1v1H7v1H5v1H3zM12 3h2v10h-2z"/></svg><span>NEXT</span></button>
@@ -78,7 +79,7 @@ const CONFIG = {
   CRUISE_SPEED: 80,                     // world px per second
   ACCEL_TIME: 7,                        // s, 0 -> cruise
   BRAKE_TIME: 6,                        // s, cruise -> 0 (nominal)
-  PX_PER_KM: 700,                        // route km -> world px (compressed)
+  PX_PER_KM: 2135,                        // route km -> world px (compressed)
   TERRAIN_BLEND: 300,                   // world px over which one landscape fades into the next
 
   // station stop sequence (seconds)
@@ -169,15 +170,16 @@ const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'gre
 // at [station index, world px from that station]; neighbouring sections
 // cross-fade over CONFIG.TERRAIN_BLEND px. What a section paints and spawns
 // in the far, mid and foreground layers is defined in SECTIONS.
+const SCALE = CONFIG.PX_PER_KM / 700;                 // the distances below were laid out at 700 px per km
 const TERRAIN = [
   { id: 'slum' },                         // the city: small buildings, houses and slums
-  { id: 'closed', at: [1, 1000] },        // closed-up terraces right up to the line
-  { id: 'slum',   at: [2, 150] },
-  { id: 'closed', at: [3, 100] },
-  { id: 'slum',   at: [4, -500] },
-  { id: 'mill',   at: [4, 1500] },        // the huge jute mill, midway to Cantonment
-  { id: 'cantt',  at: [4, 2900] },        // greenery inside the cantonment, through its station
-  { id: 'village', at: [5, 500] },        // paddy, ponds and tin roofs beyond
+  { id: 'closed', at: [1, 1000 * SCALE] },        // closed-up terraces right up to the line
+  { id: 'slum',   at: [2, 150 * SCALE] },
+  { id: 'closed', at: [3, 100 * SCALE] },
+  { id: 'slum',   at: [4, -500 * SCALE] },
+  { id: 'mill',   at: [4, 1500 * SCALE] },        // the huge jute mill, midway to Cantonment
+  { id: 'cantt',  at: [4, 2900 * SCALE] },        // greenery inside the cantonment, through its station
+  { id: 'village', at: [5, 500 * SCALE] },        // paddy, ponds and tin roofs beyond
 ];
 // Steel truss railway bridge over the Meghna, just past Bhairab Bazar
 const BRIDGE = { at: [1, 600], spans: 0, span: 120 };   // no Meghna bridge on this line
@@ -623,7 +625,21 @@ function drawTrain(g, v) {
     g.drawImage(i === 0 ? v.loco : v.cars[i - 1], veh.x, veh.y + swayOffset(i));
   });
   drawDoors(g, v);
+  drawRoofRiders(g, v);
   if (sim.hornWave > 0) drawHornWaves(g, p);
+}
+
+// Students sitting on the roofs and on the engine's steps: the fuller the train,
+// the more of them (each has its own threshold)
+function drawRoofRiders(g, v) {
+  if (!sim.roof) return;
+  const load = Math.min(1, drive.pax / 150);
+  for (let n = 0; n < sim.roof.length; n++) {
+    const r = sim.roof[n];
+    if (r.t > load) continue;
+    const veh = TRAIN.vehicles[r.car];
+    g.drawImage(personSprite(v, r.d, 4, r.dir), Math.round(veh.x + r.x - PERSON_CX), veh.y + r.fy + swayOffset(r.car) - PERSON_FY);
+  }
 }
 
 // Left pixel column of every carriage door (two per carriage)
@@ -2417,7 +2433,7 @@ function crossings() {
     const rng = mulberry32(5150 + n * 31), lanes = [[], []], pool = kinds || VEH_KINDS;
     for (const lane of lanes) for (let k = randInt(rng, 1, 3); k > 0; k--)
       lane.push({ kind: pool[Math.floor(rng() * pool.length)], col: VEH_COLORS[Math.floor(rng() * VEH_COLORS.length)] });
-    return { u: STATIONS[si].dist + off, lanes, phase: rng() * 6 };
+    return { u: STATIONS[si].dist + off * SCALE, lanes, phase: rng() * 6 };
   });
   return CROSSINGS;
 }
@@ -2537,8 +2553,8 @@ const EXTRA_Y = 164;
 let EXTRA_RANGES = null;
 function extraRanges() {
   return EXTRA_RANGES || (EXTRA_RANGES = [
-    { from: -Infinity, to: STATIONS[1].dist + 260 },                   // Bottoli's lines, gone just past Dewanhat
-    { from: STATIONS[4].dist - 1000, to: STATIONS[4].dist + 300 },     // the main line alongside at Sholosohor Junction
+    { from: -Infinity, to: STATIONS[1].dist + 260 * SCALE },                   // Bottoli's lines, gone just past Dewanhat
+    { from: STATIONS[4].dist - 1000 * SCALE, to: STATIONS[4].dist + 300 * SCALE },     // the main line alongside at Sholosohor Junction
   ]);
 }
 function drawExtraTracks(g, v) {
@@ -3077,7 +3093,7 @@ function colonialBuilding(g, p, lit, bx, base, w) {
 // Dewanhat. Sprite row 0 is screen y 56; screen x -420 is its left edge
 // while we stand here.
 function buildBottoli(p, lit) {
-  const W = 1500, H = 90, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1896), END = W - 72;
+  const W = Math.round(740 + (STATIONS[1].dist + 260 * SCALE) / 2), H = 90, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1896), END = W - 72;
   rect(g, 0, 70, W, H - 70, p.gray);                                     // yard ballast, y 126..145
   ditherRect(g, 0, 68, W, 2, p.gray, 8);
   for (let i = 0; i < W * 4; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 70, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
@@ -3873,6 +3889,7 @@ const sim = {
   nextStop: 0,
   doorOpen: 1,                             // always open: this old local train's doors never close
   riders: null,                            // passengers standing in the doorways
+  roof: null,                              // students sitting on the roofs and the engine's steps
   wheelAngle: 0, swayPhase: 0, clock: 0, cloudDrift: 0,
   hour: CONFIG.HOUR_START, night: 1,       // time of day (0..24) and how dark it is (0..1)
   smokeAcc: 0, fluffAcc: 0, flyAcc: 0, sparkAcc: 0,
@@ -3975,6 +3992,12 @@ function startJourney() {
   sim.hornTimer = 8;
   sim.doorOpen = 1;
   sim.riders = DOORS.map(() => Math.random() < 0.8 ? makeDesign(Math.random, Math.random() < 0.58 ? 'trousers' : 'kameez') : null);
+  const student = () => makeDesign(Math.random, Math.random() < 0.62 ? 'trousers' : 'kameez');
+  sim.roof = [];
+  for (let car = 1; car < TRAIN.vehicles.length; car++)
+    for (let k = 0; k < 6; k++)
+      if (Math.random() < 0.85) sim.roof.push({ car, x: 4 + k * 6 + Math.floor(Math.random() * 2), fy: -1, dir: Math.random() < 0.8 ? 1 : -1, t: Math.random(), d: student() });
+  for (const x of [41, 5]) sim.roof.push({ car: 0, x, fy: 23, dir: 1, t: Math.random() * 0.5, d: student() });
   arrive(0, 0);
   resetDrive();
   ui.complete = false;
@@ -4030,7 +4053,8 @@ function updateJourney(dt) {
 const drive = {
   on: false,                               // DRIVE mode; AUTO when false
   engine: 'OFF', engineT: 0, rpm: 0,       // OFF | CRANK | ON | SHUTDOWN; rpm 0..1 (0.3 = idle)
-  lever: 0, accel: 0,                      // lever: -5 emergency, -4..-1 brake, 0 coast, 1..8 power
+  lever: 0, accel: 0,                      // derived: -5 emergency, -4..-1 brake, 0 coast, 1..8 power
+  throttle: 0, brake: 0, brakeAcc: 0,      // the two handles: throttle 0..8; brake 0 release, 1..4 service, 5 emergency
   headlight: true, horn: false,
   tripT: 0,                                // s since the trip began: the timetable clock
   limit: CONFIG.DRIVE.LIMIT, over: false, beepT: 0,
@@ -4086,7 +4110,7 @@ function resetDrive() {
   const P = drive.pts;
   P.stops = P.time = P.pax = P.penalty = 0;
   drive.comfort = 100; drive.pax = 0; drive.final = null; drive.tripT = 0;
-  drive.lever = 0; drive.over = false;
+  drive.lever = drive.throttle = drive.brake = 0; drive.brakeAcc = 0; drive.over = false;
   toasts.length = 0; popPool.n = 0;
   hornOff();
   if (drive.on) { setEngine('OFF'); drive.rpm = 0; }
@@ -4099,7 +4123,7 @@ function setDriveMode(on) {
   ui.speed = 1;
   toasts.length = 0;
   if (on) {
-    drive.lever = 0;
+    drive.lever = drive.throttle = drive.brake = 0; drive.brakeAcc = 0;
     drive.tripT = (journeyHour() - CONFIG.HOUR_START) / HOURS_PER_S;     // the clock carries on
     if (sim.state !== 'STOPPED') sim.state = 'DRIVING';
     else if (sim.stopPhase === 'HORN') setStopPhase('CLEAR');
@@ -4130,7 +4154,7 @@ function startEngine() { setEngine('CRANK'); playCrank(); }
 
 function toggleEngine() {
   if (drive.engine === 'OFF') {
-    if (drive.lever > 0) { toast('LEVER TO N FIRST', 'amber'); return; }
+    if (drive.throttle > 0) { toast('THROTTLE TO IDLE FIRST', 'amber'); return; }
     startEngine();
   } else if (drive.engine === 'ON') {
     if (sim.speed > 0.5) toast('ENGINE OFF - COASTING', 'amber');
@@ -4171,6 +4195,34 @@ function updateEngine(dt) {
 }
 
 // --- controls ---------------------------------------------------------------
+function syncLever() {                                  // the engine sees one signal: brake wins over power
+  drive.lever = drive.brake > 0 ? -drive.brake : drive.throttle;
+  syncButtons();
+}
+function setThrottle(n) {
+  n = Math.max(0, Math.min(CONFIG.DRIVE.NOTCHES, n));
+  if (n === drive.throttle) return;
+  const was = drive.throttle;
+  drive.throttle = n;
+  playNotch();
+  syncLever();
+  if (n > 0 && was === 0) {
+    if (drive.engine === 'OFF' || drive.engine === 'SHUTDOWN') toast('START THE ENGINE [E]', 'amber');
+    else if (drive.brake > 0) toast('RELEASE THE BRAKE FIRST', 'amber');
+  }
+}
+function setBrake(n) {
+  n = Math.max(0, Math.min(5, n));
+  if (n === drive.brake) return;
+  const was = drive.brake;
+  drive.brake = n;
+  playNotch();
+  syncLever();
+  if (n === 5) { toast('EMERGENCY BRAKE!', 'red'); playAir(1.3, 0.14); }
+  else if (n > was) playAir(0.4, 0.05);
+  else if (n === 0) playAir(0.6, 0.05);                 // brakes released
+}
+
 function setLever(n) {
   const was = drive.lever;
   drive.lever = Math.max(EB, Math.min(CONFIG.DRIVE.NOTCHES, n));
@@ -4221,6 +4273,7 @@ function toggleDoors() {
 function updateDrive(dt) {
   const D = CONFIG.DRIVE, v = sim.speed;
   drive.tripT += dt;
+  drive.lever = drive.brake > 0 ? -drive.brake : drive.throttle;
   if (sim.state === 'STOPPED') updateStop(dt);
   const boarding = sim.state === 'STOPPED' && (sim.stopPhase === 'SETTLE' || sim.stopPhase === 'DOORS_OPEN' || sim.stopPhase === 'BOARDING');   // no pulling out mid-boarding
   const power = drive.lever > 0 && drive.engine === 'ON' && !boarding && !ui.complete ? drive.lever / D.NOTCHES : 0;
@@ -4229,7 +4282,11 @@ function updateDrive(dt) {
     drive.accel = 0;
     if (trac <= 0 || !depart()) return;
   }
-  const brake = drive.lever === EB ? D.EMERGENCY : drive.lever < 0 ? -drive.lever * D.BRAKE : 0;
+  const brakeWant = drive.lever === EB ? D.EMERGENCY : drive.lever < 0 ? -drive.lever * D.BRAKE : 0;       // air brakes take a moment to bite, and to let go
+  const bk = brakeWant > drive.brakeAcc ? (drive.lever === EB ? 6 : 1.1) : 0.8;
+  drive.brakeAcc += (brakeWant - drive.brakeAcc) * Math.min(1, dt * bk);
+  if (Math.abs(brakeWant - drive.brakeAcc) < 0.02) drive.brakeAcc = brakeWant;
+  const brake = drive.brakeAcc;
   const resist = v > 0 ? D.DRAG[0] + D.DRAG[1] * v * v + brake : 0;
   sim.speed = Math.max(0, v + (trac - resist) * dt);
   sim.dist += (v + sim.speed) / 2 * dt;
@@ -4379,7 +4436,7 @@ function driveHint() {
   const e = drive.engine;
   if (ui.complete) return '';
   if (e === 'CRANK') return 'STARTING THE ENGINE...';
-  const power = drive.lever < 0 ? 'RELEASE THE BRAKE [↑]' : 'APPLY POWER [↑]';
+  const power = drive.lever < 0 ? 'RELEASE THE BRAKE' : 'OPEN THE THROTTLE';
   if (sim.state === 'STOPPED') {
     const term = sim.station === LAST_STATION;
     switch (sim.stopPhase) {
@@ -4401,11 +4458,11 @@ function driveHint() {
   if (sim.speed < 0.3) {
     if (o >= w[0] && o <= w[1]) return 'OPEN THE DOORS [O]';
     if (e === 'OFF') return 'START THE ENGINE [E]';
-    if (o > w[1]) return 'OVERSHOT! DRIVE ON [↑]';
-    if (o > -160) return 'CREEP UP ' + Math.ceil(w[0] - o) + ' M [↑]';
+    if (o > w[1]) return 'OVERSHOT! DRIVE ON';
+    if (o > -160) return 'CREEP UP ' + Math.ceil(w[0] - o) + ' M';
     return power;
   }
-  if (o > -440 && o < w[0]) return 'BRAKE FOR ' + st.en + ' [↓]';
+  if (o > -440 && o < w[0]) return 'BRAKE FOR ' + st.en + '';
   return '';
 }
 
@@ -5054,7 +5111,7 @@ function buildTitle() {
   drawMask(g, bn, (w - bn.w) >> 1, 20, P.white);
   const route = STATIONS.map(s => s.code).join('-') + '   ' + STATIONS[LAST_STATION].km + ' KM';
   drawText(g, route, (w - textWidth(route)) >> 1, 23 + bn.h, P.grayLight);
-  const keys = 'E ENGINE  ↑↓ LEVER  H HORN  L LIGHT';
+  const keys = 'E ENGINE  W/S POWER  A/D BRAKE  H HORN';
   drawText(g, keys, (w - textWidth(keys)) >> 1, h - 19, P.slate);
   const foot = '←→ CHOOSE   ENTER START' + (TITLE.best ? '   BEST ' + TITLE.best : '');
   drawText(g, foot, (w - textWidth(foot)) >> 1, h - 11, P.grayLight);
@@ -5555,6 +5612,7 @@ function syncButtons() {
   // AUTO and DRIVE each show their own set of buttons
   const driving = drive.on && !ui.title;
   let relayout = false;
+  if (driving !== cabOn) { cabOn = driving; relayout = true; }                // the cab shows while you drive
   for (const b of bar.children) {
     const hide = b.classList.contains('drv') ? !driving : b.classList.contains('aut') && driving;
     if (b.hidden !== hide) { b.hidden = hide; relayout = true; }
@@ -5579,11 +5637,6 @@ function syncButtons() {
   set('b-mute', live && !audio.muted ? ICONS.sound : ICONS.mute, !live ? 'TAP' : audio.muted ? 'OFF' : 'ON', live && !audio.muted,
       !live ? 'Turn sound on' : audio.muted ? 'Unmute' : 'Mute');
   set('b-mode', null, driving ? 'DRIVE' : 'AUTO', driving, driving ? 'Driver mode on: hand back to autopilot' : 'Drive the train yourself');
-  const E = drive.engine;
-  set('b-engine', null, E === 'OFF' ? 'START' : E === 'ON' ? 'STOP' : '...', E === 'ON', E === 'OFF' ? 'Start the engine' : 'Stop the engine');
-  set('b-power', null, null, drive.lever > 0, 'Power up, lever ' + leverLabel(drive.lever));
-  set('b-brake', null, null, drive.lever < 0, 'Brake, lever ' + leverLabel(drive.lever));
-  set('b-light', null, null, drive.headlight, drive.headlight ? 'Headlight off' : 'Headlight on');
 }
 
 const actions = {
@@ -5604,30 +5657,13 @@ const actions = {
   light() { toggleLight(); },
 };
 for (const [id, act] of [['b-mode', 'mode'], ['b-pause', 'pause'], ['b-speed', 'speed'], ['b-skip', 'skip'], ['b-time', 'time'],
-                         ['b-rain', 'rain'], ['b-mute', 'mute'], ['b-engine', 'engine'], ['b-light', 'light']])
+                         ['b-rain', 'rain'], ['b-mute', 'mute']])
   btn(id).addEventListener('click', () => { unlockAudio(); actions[act](); syncButtons(); });
 
 // Power and brake step once per tap and keep stepping while held; the horn
 // sounds while held. A click with no pointer (keyboard on the button) taps.
 let holdTimer = 0;
 const endHold = () => { clearTimeout(holdTimer); holdTimer = 0; };
-for (const [id, act] of [['b-power', 'power'], ['b-brake', 'brake']]) {
-  const b = btn(id), step = () => { actions[act](); syncButtons(); };
-  b.addEventListener('pointerdown', e => {
-    unlockAudio(); step(); endHold();
-    const again = () => { step(); holdTimer = setTimeout(again, 170); };
-    holdTimer = setTimeout(again, 420);
-    e.preventDefault();
-  });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, endHold);
-  b.addEventListener('click', e => { if (e.detail === 0) step(); });
-}
-{
-  const b = btn('b-horn');
-  b.addEventListener('pointerdown', e => { unlockAudio(); hornOn(); e.preventDefault(); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, hornOff);
-  b.addEventListener('click', e => { if (e.detail === 0) { hornOn(); setTimeout(hornOff, 400); } });
-}
 
 function skipToNextStation() {
   if (ui.complete || sim.station >= LAST_STATION || drive.on) return;
@@ -5650,16 +5686,17 @@ function driveKey(key) {
   if (ui.complete) return false;
   switch (key) {
     case 'KeyE': toggleEngine(); break;
-    case 'ArrowUp': setLever(drive.lever + 1); break;
-    case 'ArrowDown': setLever(drive.lever - 1); break;
-    case 'KeyB': setLever(EB); break;
+    case 'ArrowUp': case 'KeyW': setThrottle(drive.throttle + 1); break;               // throttle handle
+    case 'ArrowDown': case 'KeyS': setThrottle(drive.throttle - 1); break;
+    case 'ArrowRight': case 'KeyD': setBrake(Math.min(4, drive.brake + 1)); break;     // brake handle
+    case 'ArrowLeft': case 'KeyA': setBrake(drive.brake - 1); break;
+    case 'KeyB': setBrake(5); break;                                                    // emergency
     case 'KeyL': toggleLight(); break;
     case 'KeyH': break;                                  // held: see keydown
     default: return false;
   }
   return true;
 }
-
 addEventListener('keydown', e => {
   unlockAudio();
   const key = e.code;
@@ -5787,6 +5824,7 @@ function render() {
   drawPanel(ctx);
   if (ui.title) drawTitle(ctx);
   else if (driving && ui.paused) drawPaused(ctx);
+  if (cabOn) drawCab();
 }
 
 // Paint terrain chunks (and the sprites standing on them) a little before
@@ -5821,6 +5859,135 @@ function warmChunk(v, L, k) {
 // screens: toolbar beside it. If neither leaves room, the toolbar floats
 // over the bottom of the picture.
 const bar = document.getElementById('bar');
+// --- the driver's cab: gauges, a throttle handle, a brake handle, the engine key,
+// the headlight switch and a horn cord, all worked by pointer or touch
+const CAB_H = 96;
+let cabOn = false;
+const cab = document.getElementById('cab'), cctx = cab.getContext('2d');
+cctx.imageSmoothingEnabled = false;
+const THROTTLE_Y = n => 82 - n * 7.5;                    // notch 0 at the bottom, 8 at the top
+const BRAKE_Y = n => 22 + n * 12;                        // release at the top, emergency at the bottom
+
+function cabLine(g, x0, y0, x1, y1, col) {
+  const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
+  for (let i = 0; i <= n; i++) px(g, Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), col);
+}
+const dialAngle = (v, max) => (135 + 270 * Math.min(1, Math.max(0, v / max))) * Math.PI / 180;
+
+function cabDial(g, cx, cy, r, max, step, numbers) {
+  const P = PALETTE;
+  disc(g, cx, cy, r, P.slate); disc(g, cx, cy, r - 2, P.navy); disc(g, cx, cy, r - 4, P.ink);
+  for (let v = 0; v <= max + 0.01; v += step) {
+    const a = dialAngle(v, max), major = Math.round(v / step) % 2 === 0, r0 = r - (major ? 10 : 8), r1 = r - 5;
+    cabLine(g, cx + Math.cos(a) * r0, cy + Math.sin(a) * r0, cx + Math.cos(a) * r1, cy + Math.sin(a) * r1, major ? P.white : P.grayLight);
+    if (major && numbers) {
+      const t = String(v);
+      drawText(g, t, Math.round(cx + Math.cos(a) * (r - 15) - (t.length * 4 - 1) / 2), Math.round(cy + Math.sin(a) * (r - 15) - 2), P.grayLight);
+    }
+  }
+}
+function cabNeedle(g, cx, cy, len, a, col) {
+  cabLine(g, cx, cy, cx + Math.cos(a) * len, cy + Math.sin(a) * len, col);
+  disc(g, cx, cy, 2, PALETTE.grayLight);
+}
+function cabPlate(g, x, y, w, h) {
+  rect(g, x, y, w, h, PALETTE.navy);
+  rect(g, x, y, w, 1, PALETTE.slate); rect(g, x, y + h - 1, w, 1, PALETTE.ink);
+  rect(g, x, y, 1, h, PALETTE.slate); rect(g, x + w - 1, y, 1, h, PALETTE.ink);
+}
+function cabLabel(g, text, cx, y, col) { drawText(g, text, Math.round(cx - (text.length * 4 - 1) / 2), y, col); }
+function cabLamp(g, x, y, on, col) {
+  rect(g, x - 1, y - 1, 5, 5, PALETTE.ink);
+  rect(g, x, y, 3, 3, on ? PALETTE[col] : PALETTE.grayDark);
+}
+
+function drawCab() {
+  const g = cctx, P = PALETTE, blink = Math.floor(sim.clock * 3) & 1, D = CONFIG.DRIVE;
+  rect(g, 0, 0, 320, CAB_H, P.ink);
+  rect(g, 0, 0, 320, 1, P.slate);
+  // what to do next, and the lamps
+  const hint = driveHint();
+  if (hint) drawText(g, hint, 6, 3, P.glow);
+  cabLamp(g, 214, 3, sim.stopPhase === 'CLEAR', 'grassLight'); drawText(g, 'FLAG', 220, 3, P.grayLight);
+  cabLamp(g, 246, 3, drive.over && blink, 'red'); drawText(g, 'SPEED', 252, 3, P.grayLight);
+  // speedometer
+  const cx = 50, cy = 54, v = sim.speed;
+  cabDial(g, cx, cy, 37, 120, 10, true);
+  const lim = dialAngle(drive.limit, 120);
+  for (let k = -1; k <= 1; k++) cabLine(g, cx + Math.cos(lim + k * 0.03) * 27, cy + Math.sin(lim + k * 0.03) * 27, cx + Math.cos(lim + k * 0.03) * 32, cy + Math.sin(lim + k * 0.03) * 32, P.red);
+  cabNeedle(g, cx, cy, 29, dialAngle(v, 120), drive.over && blink ? P.white : P.glow);
+  const t = String(Math.round(v));
+  drawText2x(g, t, cx - t.length * 4 + 1, cy + 8, P.white);
+  cabLabel(g, 'KM/H', cx, cy + 21, P.grayLight);
+  // brake gauge: pipe pressure and cylinder pressure
+  const bx = 116, by = 40, bc = Math.min(1, drive.brakeAcc / D.EMERGENCY);
+  cabLabel(g, 'BRAKE', bx, 12, P.grayLight);
+  cabDial(g, bx, by + 6, 21, 6, 1, false);
+  cabNeedle(g, bx, by + 6, 15, dialAngle(5 - 3 * bc, 6), P.white);
+  cabNeedle(g, bx, by + 6, 12, dialAngle(5 * bc, 6), P.red);
+  drawText(g, 'BP', bx - 12, by + 30, P.white); drawText(g, 'BC', bx + 5, by + 30, P.red);
+  // throttle handle
+  cabPlate(g, 144, 10, 32, 80);
+  cabLabel(g, 'POWER', 160, 13, P.grayLight);
+  rect(g, 159, 20, 3, 66, P.ink);
+  for (let n = 0; n <= D.NOTCHES; n++) {
+    const y = Math.round(THROTTLE_Y(n));
+    rect(g, 166, y, 5, 1, n ? P.grayLight : P.red);
+    if (n % 2 === 0) drawText(g, String(n), 148, y - 2, P.grayLight);
+  }
+  { const y = Math.round(THROTTLE_Y(drive.throttle));
+    rect(g, 151, y - 4, 19, 9, P.ink); rect(g, 152, y - 3, 17, 7, P.red); rect(g, 152, y - 3, 17, 2, P.rose); rect(g, 153, y + 2, 15, 1, P.rust); }
+  // brake handle
+  cabPlate(g, 188, 10, 32, 80);
+  cabLabel(g, 'BRAKE', 204, 13, P.grayLight);
+  rect(g, 203, 20, 3, 66, P.ink);
+  ['REL', '1', '2', '3', '4', 'EMG'].forEach((txt, n) => {
+    const y = Math.round(BRAKE_Y(n));
+    rect(g, 210, y, 5, 1, n === 5 ? P.red : P.grayLight);
+    drawText(g, txt, 191, y - 2, n === 5 ? P.red : P.grayLight);
+  });
+  { const y = Math.round(BRAKE_Y(drive.brake)), body = drive.brake === 5 ? P.red : drive.brake > 0 ? P.amber : P.grassLight;
+    rect(g, 195, y - 4, 19, 9, P.ink); rect(g, 196, y - 3, 17, 7, body); rect(g, 196, y - 3, 17, 2, P.white); rect(g, 197, y + 2, 15, 1, P.grayDark); }
+  // engine key, headlight switch
+  cabPlate(g, 232, 12, 38, 36);
+  cabLabel(g, 'ENGINE', 251, 15, P.grayLight);
+  const E = drive.engine;
+  disc(g, 251, 32, 8, P.grayDark); disc(g, 251, 32, 6, P.ink);
+  if (E === 'ON') cabLine(g, 251, 32, 256, 26, P.glow); else if (E === 'OFF') cabLine(g, 251, 32, 246, 26, P.grayLight); else cabLine(g, 251, 32, 258, 32, P.amber);
+  cabLamp(g, 262, 40, E === 'ON' || (E === 'CRANK' && blink), E === 'ON' ? 'grassLight' : 'amber');
+  cabPlate(g, 232, 52, 38, 36);
+  cabLabel(g, 'LIGHT', 251, 55, P.grayLight);
+  rect(g, 249, 63, 4, 20, P.ink);
+  rect(g, 247, drive.headlight ? 63 : 74, 8, 9, drive.headlight ? P.glow : P.grayLight); rect(g, 247, drive.headlight ? 63 : 74, 8, 2, P.white);
+  cabLamp(g, 262, 56, drive.headlight && E !== 'OFF', 'glow');
+  // horn cord
+  cabPlate(g, 278, 8, 36, 82);
+  const gy = drive.horn ? 50 : 38;
+  rect(g, 296, 9, 1, gy - 9, P.grayLight);
+  rect(g, 289, gy, 15, 9, P.ink); rect(g, 290, gy + 1, 13, 7, P.amber); rect(g, 290, gy + 1, 13, 2, P.peach);
+  cabLabel(g, 'HORN', 296, 80, P.grayLight);
+}
+
+let cabDrag = null;
+const cabXY = e => { const r = cab.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * CAB_H / r.height]; };
+function cabMove(y) {
+  if (cabDrag === 'throttle') setThrottle(Math.max(0, Math.min(CONFIG.DRIVE.NOTCHES, Math.round((82 - y) / 7.5))));
+  else if (cabDrag === 'brake') setBrake(Math.max(0, Math.min(5, Math.round((y - 22) / 12))));
+}
+cab.addEventListener('pointerdown', e => {
+  unlockAudio();
+  const [x, y] = cabXY(e);
+  if (x >= 140 && x < 180) cabDrag = 'throttle';
+  else if (x >= 184 && x < 224) cabDrag = 'brake';
+  else if (x >= 276 && x < 316) { cabDrag = 'horn'; hornOn(); }
+  else if (x >= 230 && x < 272 && y >= 10 && y < 50) toggleEngine();
+  else if (x >= 230 && x < 272 && y >= 50 && y < 90) toggleLight();
+  if (cabDrag) { try { cab.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ } cabMove(y); }
+  e.preventDefault();
+});
+cab.addEventListener('pointermove', e => { if (cabDrag) cabMove(cabXY(e)[1]); });
+for (const ev of ['pointerup', 'pointercancel']) cab.addEventListener(ev, () => { if (cabDrag === 'horn') hornOff(); cabDrag = null; });
+
 function fit() {
   const cs = getComputedStyle(document.body);
   const aw = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
@@ -5829,14 +5996,17 @@ function fit() {
   for (const b of bar.children) if (!b.hidden) n++;
   const B = 48, GAP = 8, along = n * B + (n - 1) * 6;
   const rows = Math.ceil(n / Math.max(1, Math.floor((aw + 6) / (B + 6)))), tall = rows * B + (rows - 1) * 6;
-  const below = rows <= 2 ? Math.min(aw / W, (ah - tall - GAP) / H) : 0;
-  const side = along <= ah ? Math.min((aw - B - GAP) / W, ah / H) : 0;
-  const over = Math.min(aw / W, ah / H);
+  const Ht = H + (cabOn ? CAB_H : 0);
+  const below = rows <= 2 || cabOn ? Math.min(aw / W, (ah - tall - GAP) / Ht) : 0;
+  const side = along <= ah ? Math.min((aw - B - GAP) / W, ah / Ht) : 0;
+  const over = Math.min(aw / W, ah / Ht);
   let mode = side >= below ? 'side' : 'below', s = Math.max(side, below);
-  if (s < over * 0.8) { mode = 'overlay'; s = over; }
-  document.body.className = mode;
+  if (s < over * 0.8 && !cabOn) { mode = 'overlay'; s = over; }
+  document.body.className = mode + (cabOn ? ' cabbed' : '');
   canvas.style.width = Math.floor(W * s) + 'px';
   canvas.style.height = Math.floor(H * s) + 'px';
+  cab.style.width = Math.floor(W * s) + 'px';
+  cab.style.height = Math.floor(CAB_H * s) + 'px';
 }
 addEventListener('resize', fit);
 addEventListener('orientationchange', () => setTimeout(fit, 100));
