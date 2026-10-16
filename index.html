@@ -142,7 +142,8 @@ const ROUTE = [
     platform: [-330, 650], roof: 'shed', roofColor: 'rust', oldSlab: true, crowd: 44, alight: 0, idle: 10,
     backdrop: ['city', 'bottoli'], extras: ['porter', 'clutter'] },
   { en: 'DEWANHAT', bn: 'দেওয়ানহাট', code: 'DWH', km: 2,           // only a stoppage: no platform, no roof, nothing
-    platform: [-40, 360], roof: 'shelter', halt: true, crowd: [0, 2], alight: 1, idle: 0 },
+    platform: [-40, 360], roof: 'shelter', halt: true, crowd: [0, 2], alight: 1, idle: 0,
+    backdrop: ['dewanhat'], extras: ['peanuts', 'locals'] },
   { en: 'JHAWTOLA', bn: 'ঝাউতলা', code: 'JHT', km: 5,
     platform: [-40, 360], roof: 'shelter', noRoof: true, crowd: 16, alight: 6, idle: 2,   // a solid station building, but no shed over the platform
     backdrop: ['jhawtola'] },
@@ -172,7 +173,8 @@ const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'gre
 // in the far, mid and foreground layers is defined in SECTIONS.
 const SCALE = CONFIG.PX_PER_KM / 700;                 // the distances below were laid out at 700 px per km
 const TERRAIN = [
-  { id: 'slum' },                         // the city: small buildings, houses and slums
+  { id: 'closed' },                       // out of Bottoli: dense, buildings shoulder to shoulder against the line
+  { id: 'slum',   at: [1, 300 * SCALE] },  // loosening up past Dewanhat
   { id: 'closed', at: [1, 1000 * SCALE] },        // closed-up terraces right up to the line
   { id: 'slum',   at: [2, 150 * SCALE] },
   { id: 'closed', at: [3, 100 * SCALE] },
@@ -916,6 +918,18 @@ function buildPoles(p) {
 }
 
 // --- 5b. track: gravel bed, wooden sleepers, two rails (1.0x) ---------
+// The abandoned yard lines: the same track, its rails rusted and weeds coming up through it
+function buildTrackRusty(p) {
+  const c = buildTrack(p), g = c.getContext('2d'), rng = mulberry32(14), TW = c.width;
+  rect(g, 0, 6, TW, 1, p.rust); rect(g, 0, 7, TW, 1, p.brown); rect(g, 0, 11, TW, 1, p.rust); rect(g, 0, 12, TW, 1, p.brown);
+  for (let x = 0; x < TW; x++) if (rng() < 0.12) { px(g, x, 6, p.orange); px(g, x, 11, p.orange); }
+  for (let i = 0; i < TW * 0.8; i++) {
+    const x = randInt(rng, 0, TW - 1), y = randInt(rng, 3, 14);
+    for (let j = 0, h = randInt(rng, 1, 3); j < h; j++) px(g, x, y - j, rng() < 0.5 ? p.green : p.greenDark);
+  }
+  return c;
+}
+
 function buildTrack(p) {
   const TW = 192, TH = 20, rng = mulberry32(5);
   const [c, g] = makeCanvas(TW, TH);
@@ -1043,6 +1057,7 @@ function buildVariant(name) {
     cumulus: buildCumulus(p),
     poles: buildPoles(p),
     track: buildTrack(p),
+    trackRust: buildTrackRusty(p),
     deck: buildDeck(p),
     pier: buildPier(p),
     abutment: [buildAbutment(p, false), buildAbutment(p, true)],
@@ -1660,65 +1675,127 @@ const SLUM_WALLS = ['tan', 'cream', 'brown', 'rust', 'grayLight', 'skyMid', 'pad
 const SLUM_ROOFS = ['grayLight', 'grayLight', 'rust', 'rust', 'blue', 'gray'];
 
 // A one-room shack: plank walls, a door, a sloping tin roof weighed down with bricks
-function slumShack(g, p, lit, x, base, w, h, wall, roofKey, lamp) {
-  rect(g, x, base - h, w, h, p[wall]);
-  ditherRect(g, x, base - h, w, h, p.brown, 3);
-  rect(g, x + 1, base - 5, 2, 5, p.brownDark);
+// A makeshift shack: walls of mismatched scrap wood and bamboo, and a rusty,
+// patched corrugated-tin roof sloping down to one side
+function slumShack(g, p, lit, x, base, w, h, lamp, seed) {
+  const rng = mulberry32(seed);
+  for (let i = 0; i < w; i += 2) {
+    rect(g, x + i, base - h, Math.min(2, w - i), h, p[pick(rng, ['tan', 'brown', 'grayLight', 'rust', 'paddy', 'brownDark', 'tan'])]);
+    if (rng() < 0.3) px(g, x + i, base - h + randInt(rng, 1, h - 2), p.ink);               // gaps between the boards
+  }
+  rect(g, x, base - 1, w, 1, p.brownDark);
+  rect(g, x + 1, base - 5, 2, 5, p.ink);
   if (w > 9) rect(g, x + w - 4, base - 6, 2, 2, lamp ? PALETTE.glow : p.ink);
-  rect(g, x - 1, base - h - 2, w + 2, 2, p[roofKey]);
-  for (let xx = x - 1; xx < x + w + 1; xx += 2) px(g, xx, base - h - 2, p.grayDark);
-  rect(g, x - 1, base - h - 3, w + 2, 1, p.grayDark);
-  if (w > 10) { rect(g, x + 3, base - h - 4, 2, 1, p.brownDark); px(g, x + w - 3, base - h - 4, p.brownDark); }
+  const dir = rng() < 0.5 ? 1 : -1;
+  for (let r = 0; r < 4; r++) {                                                           // sloping roof, higher on one side
+    const y = base - h - 1 - r, x0 = dir > 0 ? x - 1 + r : x - 1, rw = w + 2 - r;
+    for (let xx = x0; xx < x0 + rw; xx++) {
+      const k = hash2(xx >> 1, y + (seed & 63));
+      px(g, xx, y, (xx + r) % 3 === 0 ? p.brownDark : k < 0.45 ? p.rust : k < 0.7 ? p.grayLight : k < 0.85 ? p.brown : k < 0.93 ? p.blue : p.orange);   // rust, tin and tarpaulin patches
+    }
+  }
+  rect(g, x + 2, base - h - 6 + (dir > 0 ? 0 : 1), 2, 1, p.ink); px(g, x + w - 3, base - h - 6 + (dir > 0 ? 1 : 0), p.ink);   // bricks and tyres holding the roof down
 }
 
-// A small concrete-and-brick block of one to three floors; extra: 1 water tank, 2 antenna, 3 washing line
-function slumBlock(g, p, lit, x, base, w, floors, wall, lamps, extra) {
-  const fh = 7, h = floors * fh + 2;
-  rect(g, x, base - h, w, h, p[wall]);
-  ditherRect(g, x + w - 3, base - h, 3, h, p.grayDark, 6);
-  rect(g, x - 1, base - h - 1, w + 2, 2, p.grayLight);
+// A concrete block of one to three floors in a faded wash (tone 0 peeling cream,
+// 1 pale green, 2 dirty pink), with damp creeping up from the ground and black
+// mould under the windows; a blue water tank and a tangle of antennas on top
+function slumBlock(g, p, lit, x, base, w, floors, tone, lamps, tank, ant, seed) {
+  const fh = 7, h = floors * fh + 2, rng = mulberry32(seed), top = base - h;
+  rect(g, x, top, w, h, tone === 2 ? p.rose : p.cream);
+  if (tone === 1) ditherRect(g, x, top, w, h, p.grassLight, 5);
+  else if (tone === 2) ditherRect(g, x, top, w, h, p.cream, 4);
+  for (let n = 0; n < w * floors * 0.5; n++) rect(g, x + randInt(rng, 0, w - 2), top + randInt(rng, 1, h - 3), 2, 1, rng() < 0.6 ? p.tan : p.cloudShade);   // peeling plaster
+  ditherRect(g, x + w - 3, top, 3, h, p.grayDark, 6);
+  for (let xx = x; xx < x + w; xx++) {                                                    // damp stains creeping up
+    const hgt = 2 + Math.floor(hash2(xx >> 1, seed & 255) * h * 0.45);
+    for (let j = 0; j < hgt; j++) if (bayer(xx, base - 1 - j) < 14 - j * 14 / hgt) px(g, xx, base - 1 - j, p.brownDark);
+  }
+  rect(g, x - 1, top - 1, w + 2, 2, p.grayLight);
   for (let f = 0; f < floors; f++)
-    for (let wx = x + 2; wx + 2 <= x + w - 2; wx += 5)
-      rect(g, wx, base - h + 2 + f * fh, 2, 3, lit && lamps[f * 6 + (((wx - x) / 5) | 0)] ? PALETTE.glow : p.indigo);
+    for (let wx = x + 2; wx + 2 <= x + w - 2; wx += 5) {
+      const wy = top + 2 + f * fh;
+      rect(g, wx, wy, 2, 3, lit && lamps[f * 6 + (((wx - x) / 5) | 0)] ? PALETTE.glow : p.indigo);
+      if (rng() < 0.7) rect(g, wx + (rng() < 0.5 ? 0 : 1), wy + 3, 1, randInt(rng, 2, 3), p.ink);   // black mould streaks
+    }
   rect(g, x + 1, base - 4, 2, 4, p.brownDark);
-  if (extra === 1) { rect(g, x + 2, base - h - 4, 4, 3, p.blue); px(g, x + 2, base - h - 4, p.skyLight); }
-  else if (extra === 2) { rect(g, x + w - 4, base - h - 6, 1, 5, p.grayDark); rect(g, x + w - 6, base - h - 6, 4, 1, p.grayDark); }
-  else if (extra === 3) {
-    const cols = ['red', 'white', 'skyMid', 'paddy'];
-    for (let i = 0; i < w - 3; i += 2) { const k = p[cols[(i >> 1) % 4]]; px(g, x + 1 + i, base - h - 3, k); px(g, x + 1 + i, base - h - 2, k); }
+  if (tank) { rect(g, x + 2, top - 6, 5, 4, p.blue); rect(g, x + 2, top - 6, 5, 1, p.skyMid); px(g, x + 3, top - 2, p.grayDark); px(g, x + 5, top - 2, p.grayDark); }
+  if (ant) {
+    const ax = x + w - 7;
+    rect(g, ax, top - 9, 1, 8, p.grayDark);
+    for (let k = 0; k < 3; k++) { cabLine(g, ax, top - 8 + k * 2, ax - 3 - k, top - 9 + k * 2, p.grayDark); cabLine(g, ax, top - 8 + k * 2, ax + 3 + k, top - 10 + k * 2, p.grayDark); }
   }
 }
 
-function slumFar(ctx) {                                  // a dense low skyline in the haze
+// Colourful washing strung across a roof, fluttering in the wind (drawn live)
+function clotheslineEnt(x0, x1, y, base, rng) {
+  const cols = ['red', 'white', 'blue', 'paddy', 'skyMid', 'rose'], n = Math.max(2, (x1 - x0 - 4) >> 2), ph = rng() * 6;
+  const picks = Array.from({ length: n }, () => pick(rng, cols));
+  return { x0, x1, z: base + 1, draw(g, v, ox, oy, t) {
+    const yy = y + oy;
+    g.fillStyle = v.p.grayDark; g.fillRect(x0 + ox, yy, x1 - x0, 1);
+    for (let i = 0; i < n; i++) {
+      const f = Math.sin(t * 3 + i * 1.3 + ph + windAt(x0 + i * 4, t) * 2) > 0.2 ? 1 : 0, x = x0 + 3 + i * 4 + ox;
+      g.fillStyle = v.p[picks[i]]; g.fillRect(x + f, yy + 1, 2, 1); g.fillRect(x + f, yy + 2, 1, 1 + f);
+    }
+  } };
+}
+
+function slumBillboard(g, p, x, top, bw, bh, base) {     // the silhouette of a tall billboard frame
+  rect(g, x + 2, top + bh, 2, base - top - bh, p.haze); rect(g, x + bw - 4, top + bh, 2, base - top - bh, p.haze);
+  rect(g, x, top, bw, 1, p.haze); rect(g, x, top + bh - 1, bw, 1, p.haze); rect(g, x, top, 1, bh, p.haze); rect(g, x + bw - 1, top, 1, bh, p.haze);
+  ditherRect(g, x + 1, top + 1, bw - 2, bh - 2, p.skyMid, 5);
+  for (let k = 0; k < bw - 2; k += 6) cabLine(g, x + 1 + k, top + 1, x + 4 + k, top + bh - 2, p.haze);   // braces
+}
+
+function slumFar(ctx) {                                  // the city haze: a jagged, continuous skyline of packed blocks
   const { rng } = ctx, base = 52;
-  for (let x = ctx.from; x < ctx.to; ) {
-    const w = randInt(rng, 5, 14), h = rng() < 0.1 ? randInt(rng, 20, 28) : randInt(rng, 6, 15), tx = x;
-    if (ctx.ok(tx)) ctx.stat(tx, tx + w, 0, (g, p, lit, ox) => {
-      rect(g, tx + ox, base - h, w, h, p.haze);
-      if (h > 12) ditherRect(g, tx + ox + 1, base - h + 2, w - 2, h - 3, p.slate, 3);
-    });
-    x += w + randInt(rng, 0, 2);
+  for (let rank = 0; rank < 2; rank++)                   // the far rank is washed out in the smog, the near one darker
+    for (let x = ctx.from; x < ctx.to; ) {
+      const w = randInt(rng, 4, 12), tall = rng() < 0.08, h = (rank ? randInt(rng, 8, 22) : randInt(rng, 12, 34)) + (tall ? 8 : 0), tx = x;
+      const tank = w > 6 && rng() < 0.25;
+      if (ctx.ok(tx)) ctx.stat(tx, tx + w, rank, (g, p, lit, ox) => {
+        rect(g, tx + ox, base - h, w, h, p.haze);
+        if (!rank) ditherRect(g, tx + ox, base - h, w, h, p.skyMid, 6);
+        else if (h > 10) ditherRect(g, tx + ox + 1, base - h + 2, w - 2, h - 3, p.slate, 3);
+        if (tank) rect(g, tx + ox + 1, base - h - 2, 3, 2, p.haze);
+      });
+      x += w;                                            // no gaps
+    }
+  for (let x = ctx.from + randInt(rng, 30, 90); x < ctx.to; x += randInt(rng, 140, 260)) {      // billboards
+    const bw = randInt(rng, 16, 24), bh = randInt(rng, 8, 11), top = randInt(rng, 6, 14), tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx, tx + bw, 3, (g, p, lit, ox) => slumBillboard(g, p, tx + ox, top, bw, bh, base));
   }
-  treeLine(ctx);
+  for (let x = ctx.from + randInt(rng, 5, 30); x < ctx.to; ) {                                    // utility poles with drooping wires
+    const gap = randInt(rng, 48, 90), ptop = randInt(rng, 18, 28), tx = x;
+    if (ctx.ok(tx)) ctx.stat(tx - 2, tx + gap + 3, 4, (g, p, lit, ox) => {
+      for (const px0 of [tx, tx + gap]) { rect(g, px0 + ox, ptop, 1, base - ptop, p.slate); rect(g, px0 + ox - 3, ptop + 1, 7, 1, p.slate); }
+      for (let k = 0; k < 3; k++)
+        for (let i = 0; i <= gap; i++) px(g, tx + ox + i, ptop + 1 + k * 2 + Math.round(Math.sin(i / gap * Math.PI) * 5), p.slate);
+    });
+    x += gap;
+  }
 }
 
-function slumMid(ctx, dense) {                           // roofs packed shoulder to shoulder, two rows deep; dense: closed-up terraces
+function slumMid(ctx, dense) {                           // dense: three ranks, shoulder to shoulder with no gaps
   const { rng, L } = ctx, G = 34;
-  for (let row = 0; row < 2; row++)
+  for (let row = 0; row < (dense ? 3 : 2); row++)
     for (let x = ctx.from + randInt(rng, 0, 8); x < ctx.to; ) {
-      const base = G + 2 + (row ? randInt(rng, 6, 13) : randInt(rng, 0, 3)), kind = rng(), tx = x;
+      const base = G + 2 + (row === 0 ? randInt(rng, 0, 2) : row === 1 ? randInt(rng, 5, 8) : randInt(rng, 11, 14)), kind = rng(), tx = x, seed = randInt(rng, 1, 1e6);
       let w;
-      if (kind < (dense ? 0.08 : 0.5)) {                 // tin-roofed shack
+      if (kind < (dense ? 0.38 : 0.55)) {                // makeshift shack
         w = randInt(rng, 8, 14);
-        const h = randInt(rng, 6, 9), wall = pick(rng, SLUM_WALLS), roofKey = pick(rng, SLUM_ROOFS), lamp = rng() < 0.5;
-        if (ctx.ok(tx)) ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumShack(g, p, lit, tx + ox, base, w, h, wall, roofKey, lamp));
-      } else if (kind < (dense ? 0.94 : 0.8)) {          // small brick block
+        const h = randInt(rng, 6, 9), lamp = rng() < 0.5;
+        if (ctx.ok(tx)) ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumShack(g, p, lit, tx + ox, base, w, h, lamp, seed));
+      } else if (kind < (dense ? 0.96 : 0.82)) {         // concrete block, one to three floors
         w = dense ? randInt(rng, 14, 26) : randInt(rng, 12, 22);
-        const floors = dense ? (row ? randInt(rng, 2, 4) : randInt(rng, 3, 5)) : (row ? randInt(rng, 1, 2) : randInt(rng, 2, 3));
-        const extra = randInt(rng, 0, 3), wall = pick(rng, ['cream', 'tan', 'grayLight', 'paddy', 'rust', 'skyLight', 'rose']);
-        const lamps = Array.from({ length: floors * 6 }, () => rng() < 0.45);
-        if (ctx.ok(tx)) ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumBlock(g, p, lit, tx + ox, base, w, floors, wall, lamps, extra));
-      } else if (kind < (dense ? 0.97 : 0.93)) {         // bamboo-and-tin house, as in the villages
+        const floors = row === 0 ? randInt(rng, 2, 3) : randInt(rng, 1, 3), tone = randInt(rng, 0, 2);
+        const lamps = Array.from({ length: floors * 6 }, () => rng() < 0.45), tank = rng() < 0.5, ant = rng() < 0.5;
+        if (ctx.ok(tx)) {
+          ctx.stat(tx - 1, tx + w + 1, base, (g, p, lit, ox) => slumBlock(g, p, lit, tx + ox, base, w, floors, tone, lamps, tank, ant, seed));
+          if (rng() < 0.45) ctx.live(clotheslineEnt(tx + 1, tx + w - 1, base - (floors * 7 + 2) - 4, base, rng));
+        }
+      } else if (!dense && kind < 0.93) {                // bamboo-and-tin house
         w = randInt(rng, 10, 16);
         const tin = rng() < 0.85, on = rng() < 0.6;
         if (ctx.ok(tx)) ctx.stat(tx - 2, tx + w + 3, base, (g, p, lit, ox) => house(g, tx + ox, base, w, p, tin, lit && on, 0));
@@ -1727,26 +1804,65 @@ function slumMid(ctx, dense) {                           // roofs packed shoulde
         const palm = rng() < 0.5, h = randInt(rng, 13, 19), lean = randInt(rng, -2, 2);
         if (ctx.ok(tx)) ctx.live(palm ? swayer(L, tx + 3, base, 'coco', h, lean) : swayer(L, tx + 3, base, 'banana'));
       }
-      x += w + (dense ? -randInt(rng, 0, 1) : randInt(rng, -1, 3));
+      x += w + (dense ? 0 : randInt(rng, -1, 3));
     }
 }
 
-function slumFg(ctx) {                                   // a dirt lane with rickshaws, litter and weeds
-  const { rng } = ctx;
-  for (let x = ctx.from + randInt(rng, 0, 200); x < ctx.to; ) {
-    const len = randInt(rng, 260, 520), a = x;
-    if (ctx.ok(a + (len >> 1))) for (let n = randInt(rng, 1, 2); n > 0; n--) ctx.live(rickshawEnt(a, a + len, 20, rng, rng() < 0.4));
-    x += len + randInt(rng, 60, 260);
+// --- right beside the tracks: a decaying brick boundary wall, a narrow dirt lane, an open drain
+function brickWall(g, p, x, len, base, seed) {           // low, crumbling, missing bricks
+  const rng = mulberry32(seed);
+  for (let i = 0; i < len; i++) {
+    const h = rng() < 0.12 ? 1 : rng() < 0.3 ? 2 : 3;
+    for (let j = 0; j < h; j++) px(g, x + i, base - j, (i + (j & 1) * 2) % 4 === 3 ? p.brown : rng() < 0.15 ? p.tan : p.rust);
+    if (h === 3 && rng() < 0.06) px(g, x + i, base - 1, p.ink);                           // a brick gone
   }
-  for (let x = ctx.from + randInt(rng, 10, 80); x < ctx.to; x += randInt(rng, 50, 130)) {
-    const y = randInt(rng, 22, 30), tx = x, cols = ['white', 'red', 'blue', 'paddy', 'grayLight'];
-    const bits = Array.from({ length: 7 }, () => [randInt(rng, -3, 3), randInt(rng, -1, 0), pick(rng, cols)]);
-    if (ctx.ok(x)) ctx.stat(tx - 4, tx + 4, y, (g, p, lit, ox) => {
-      rect(g, tx + ox - 3, y - 1, 7, 1, p.brownDark);
-      for (const [dx, dy, k] of bits) px(g, tx + ox + dx, y + dy - 1, p[k]);
-    });
+  rect(g, x, base - 3, 2, 4, p.brown); rect(g, x + len - 2, base - 3, 2, 4, p.brown);
+}
+function sleeperPile(g, p, x, base) {                    // discarded wooden sleepers
+  for (let r = 0; r < 3; r++) { rect(g, x + r, base - 2 - r * 2, 9 - r, 2, r & 1 ? p.brown : p.brownDark); px(g, x + r, base - 2 - r * 2, p.tan); }
+}
+function signalBox(g, p, x, base) {                      // a rusty signal box on short legs, cable trailing
+  rect(g, x, base - 8, 8, 6, p.rust); rect(g, x, base - 8, 8, 1, p.brown); rect(g, x + 1, base - 7, 3, 4, p.brownDark); px(g, x + 6, base - 6, p.amber);
+  rect(g, x + 1, base - 2, 1, 2, p.grayDark); rect(g, x + 6, base - 2, 1, 2, p.grayDark);
+  for (let k = 0; k < 8; k++) px(g, x + 8 + k, base - 1 - (k % 3 === 0 ? 1 : 0), p.ink);
+}
+function cableCoil(g, p, x, base) {                      // a coil of old cable
+  for (const r of [4, 3, 2]) for (let a = 0; a < 16; a++)
+    px(g, x + 4 + Math.round(Math.cos(a * Math.PI / 8) * r), base - 3 + Math.round(Math.sin(a * Math.PI / 8) * r * 0.6), r === 3 ? p.grayDark : p.ink);
+}
+function walkerEnt(a, b, y, rng) {                       // a man pushing his bicycle along the lane, right beside the train
+  const len = b - a - 16, ph = rng() * len * 2, sp = 3 + rng() * 3, shirt = pick(rng, SHIRTS), lungi = pick(rng, LUNGIS)[0], skin = pick(rng, SKINS);
+  return { x0: a, x1: b, z: y, draw(g, v, ox, oy, t) {
+    const s = (t * sp + ph) % (2 * len), fwd = s < len, step = Math.floor(t * 3) & 1;
+    mpAt(g, v.p, Math.round(a + 8 + (fwd ? s : 2 * len - s)) + ox, y + oy, fwd ? 1 : -1);
+    mpRect(0, -12, 2, 1, 'ink'); mpRect(0, -11, 2, 1, skin); mpRect(0, -10, 2, 3, shirt); mpRect(0, -7, 2, 3, lungi);
+    mp(step, -4, skin); mp(1 - step, -4, skin); mp(2, -8, skin);
+    cycleWheel(5, -2, step); cycleWheel(12, -2, step);
+    mpRect(6, -4, 6, 1, 'grayDark'); mp(8, -5, 'grayDark'); mpRect(11, -7, 1, 3, 'grayDark'); mp(12, -8, 'grayDark');
+  } };
+}
+function slumFg(ctx) {
+  const { rng, L } = ctx, yardEnd = STATIONS[1].dist + 400 * SCALE;
+  for (let x = ctx.from; x < ctx.to; ) {                 // the boundary wall, in runs with breaks where it has fallen
+    const len = randInt(rng, 24, 70), gap = rng() < 0.5 ? randInt(rng, 5, 16) : 0, tx = x, seed = randInt(rng, 1, 1e6);
+    if (ctx.ok(tx + (len >> 1))) ctx.stat(tx, tx + len, 20, (g, p, lit, ox) => brickWall(g, p, tx + ox, len, 20, seed));
+    x += len + gap;
   }
-  addTufts(ctx, 22, 13, 15);
+  for (let x = ctx.from + randInt(rng, 0, 200); x < ctx.to; ) {      // cycle rickshaws and people pushing bicycles along the lane
+    const len = randInt(rng, 220, 480), a = x;
+    if (ctx.ok(a + (len >> 1))) {
+      for (let n = randInt(rng, 1, 2); n > 0; n--) ctx.live(rng() < 0.55 ? rickshawEnt(a, a + len, 17, rng, rng() < 0.4) : walkerEnt(a, a + len, 17, rng));
+    }
+    x += len + randInt(rng, 40, 200);
+  }
+  for (let x = ctx.from + randInt(rng, 20, 90); x < ctx.to; x += randInt(rng, 40, 110)) {     // dark weeds beside the ballast
+    const tx = x, y = randInt(rng, 13, 14), blades = Array.from({ length: randInt(rng, 3, 6) }, () => [randInt(rng, -2, 2), randInt(rng, 2, 4), rng() < 0.5]);
+    if (ctx.ok(tx)) ctx.stat(tx - 3, tx + 3, y, (g, p, lit, ox) => { for (const [dx, bh, dark] of blades) for (let k = 0; k < bh; k++) px(g, tx + ox + dx, y - k, dark ? p.greenDeep : p.greenDark); });
+  }
+  for (let x = ctx.from + randInt(rng, 30, 120); x < ctx.to; x += randInt(rng, 110, 230)) {   // the yard's leftovers, until the lines end at Dewanhat
+    const tx = x, kind = randInt(rng, 0, 2);
+    if (ctx.ok(tx) && uOf(L, tx) < yardEnd) ctx.stat(tx, tx + 17, 20, (g, p, lit, ox) => (kind === 0 ? sleeperPile : kind === 1 ? signalBox : cableCoil)(g, p, tx + ox, 20));
+  }
 }
 
 function slumMidGround(c, y, lx) {
@@ -1755,13 +1871,21 @@ function slumMidGround(c, y, lx) {
   return hash2(lx >> 1, y) < 0.22 ? 'brownDark' : hash2(lx, y + 5) < 0.14 ? 'tan' : 'brown';
 }
 
-function slumFgGround(c, y, lx) {
+function slumFgGround(c, y, lx) {                        // rows 12..20 are what shows between the track and the extra line
   if (y < 12) return null;
-  if (y === 12) return bayer(lx, y) < 9 ? 'tan' : 'gray';
-  if (y < 17) return hash2(lx >> 1, y) < 0.3 ? 'grayDark' : hash2(lx, y) < 0.25 ? 'gray' : hash2(lx, y + 3) < 0.2 ? 'tan' : 'brownDark';
-  if (y <= 20) return (y === 18 || y === 20) && bayer(lx, y) < 5 ? 'brown' : hash2(lx, y) < 0.05 ? 'cream' : 'tan';
+  if (y === 12) return bayer(lx, y) < 9 ? 'gray' : 'grayDark';
+  if (y === 13) {                                        // dark trackside dirt, litter and weeds
+    const k = hash2(lx, 13);
+    return k < 0.06 ? 'white' : k < 0.09 ? 'blue' : k < 0.12 ? 'red' : k < 0.3 ? 'greenDark' : k < 0.6 ? 'brownDark' : 'ink';
+  }
+  if (y === 14) return hash2(lx >> 1, 14) < 0.5 ? 'grayLight' : 'gray';                        // concrete lip of the open drain
+  if (y === 15) return lx % 24 < 3 ? 'grayLight' : hash2(lx >> 2, 15) < 0.08 ? 'indigo' : 'ink';   // the drain itself, with a cover slab now and then
+  if (y === 16) return 'gray';
+  if (y <= 17) return hash2(lx, y) < 0.07 ? 'cream' : hash2(lx >> 1, y) < 0.3 ? 'brown' : 'tan';  // the narrow dirt lane
+  if (y <= 20) { const k = hash2(lx, y); return k < 0.07 ? 'white' : k < 0.1 ? 'red' : k < 0.13 ? 'blue' : k < 0.3 ? 'greenDark' : 'brownDark'; }   // where the wall has fallen: rubble and weeds
   if (hash2(lx >> 3, y >> 2) < 0.04) return 'skyMid';
-  return hash2(lx >> 1, y) < 0.24 ? 'brownDark' : hash2(lx, y + 9) < 0.12 ? 'tan' : 'brown';
+  const k = hash2(lx, y + 9);
+  return k < 0.04 ? 'white' : k < 0.07 ? 'red' : hash2(lx >> 1, y) < 0.24 ? 'brownDark' : k < 0.2 ? 'tan' : 'brown';
 }
 
 // --- the jute mill: sawtooth sheds, a tall chimney, a water tower, a boundary wall, stacked bales
@@ -2553,21 +2677,63 @@ const EXTRA_Y = 164;
 let EXTRA_RANGES = null;
 function extraRanges() {
   return EXTRA_RANGES || (EXTRA_RANGES = [
-    { from: -Infinity, to: STATIONS[1].dist + 260 * SCALE },                   // Bottoli's lines, gone just past Dewanhat
+    { from: -Infinity, to: STATIONS[1].dist + 260 * SCALE, rust: true },                   // Bottoli's lines, gone just past Dewanhat
     { from: STATIONS[4].dist - 1000 * SCALE, to: STATIONS[4].dist + 300 * SCALE },     // the main line alongside at Sholosohor Junction
   ]);
 }
 function drawExtraTracks(g, v) {
   const cam = Math.floor(sim.dist), T = 160, tw = v.track.width;
   for (const r of extraRanges()) {
-    const xa = r.from - cam + ANCHOR_X, xb = r.to - cam + ANCHOR_X;
+    const xa = r.from - cam + ANCHOR_X, xb = r.to - cam + ANCHOR_X, tile = r.rust ? v.trackRust : v.track;
     if (xb + T <= 0 || xa - T >= W) continue;
     const x1 = Math.min(W, Math.ceil(xb + T));
     for (let x = Math.max(0, Math.floor(xa - T)); x < x1; x++) {
       const dy = x < xa ? 30 * (1 - smoothstep((x - (xa - T)) / T)) : x > xb ? 30 * smoothstep((x - xb) / T) : 0;
       if (dy >= 18) continue;
-      g.drawImage(v.track, (((x + cam) % tw) + tw) % tw, 0, 1, 20, x, EXTRA_Y + Math.round(dy), 1, 20);
+      g.drawImage(tile, (((x + cam) % tw) + tw) % tw, 0, 1, 20, x, EXTRA_Y + Math.round(dy), 1, 20);
     }
+  }
+  drawExtraWagons(g, v);
+}
+
+// Rusted freight wagons left standing on the abandoned yard line (on the near rail)
+let EXTRA_WAGONS = null;
+function extraWagons() {
+  if (!EXTRA_WAGONS) {
+    const rng = mulberry32(401), list = [], end = STATIONS[1].dist - 450;
+    for (let u = STATIONS[0].dist + 800; u < end; u += randInt(rng, 450, 1000)) {
+      const cars = randInt(rng, 1, 3), kind = pick(rng, ['box', 'box', 'tank', 'open']);
+      for (let k = 0; k < cars; k++) list.push({ u: u + k * 31, kind: k && rng() < 0.4 ? pick(rng, ['box', 'open']) : kind });
+    }
+    EXTRA_WAGONS = list;
+  }
+  return EXTRA_WAGONS;
+}
+function paintWagon(g, p, kind) {                        // 28 x 19, wheels on the bottom row
+  if (kind === 'tank') {
+    rect(g, 1, 1, 26, 10, p.brown); rect(g, 1, 1, 26, 2, p.rust); rect(g, 12, 0, 4, 1, p.rust);
+    for (let i = 0; i < 26; i++) px(g, 2 + (i * 7) % 24, 2 + (i * 3) % 8, i % 3 ? p.orange : p.brownDark);
+    for (let x = 6; x < 26; x += 8) rect(g, x, 1, 1, 10, p.brownDark);
+  } else if (kind === 'open') {
+    rect(g, 0, 4, 28, 7, p.rust); rect(g, 0, 4, 28, 1, p.brown);
+    for (let i = 0; i < 26; i += 2) px(g, 1 + i, 3 - (i % 3 === 0 ? 1 : 0), p.grayDark);        // a heap of scrap sticking out
+    for (let x = 3; x < 28; x += 5) rect(g, x, 5, 1, 6, p.brownDark);
+  } else {
+    rect(g, 0, 1, 28, 10, p.rust); rect(g, 0, 0, 28, 1, p.grayDark);
+    for (let y = 3; y < 11; y += 3) rect(g, 0, y, 28, 1, p.brown);
+    rect(g, 11, 2, 7, 9, p.brown); rect(g, 11, 2, 1, 9, p.ink); rect(g, 17, 2, 1, 9, p.ink);   // sliding door
+    for (let i = 0; i < 18; i++) px(g, (i * 11) % 28, 1 + (i * 5) % 10, p.red);
+  }
+  rect(g, 0, 11, 28, 2, p.ink);
+  for (const wx of [4, 9, 19, 24]) { disc(g, wx, 15, 3, p.ink); px(g, wx, 15, p.rust); }
+  for (let i = 0; i < 5; i++) px(g, randInt(mulberry32(i + 3), 1, 26), 0, p.green);              // weeds on the roof
+}
+function drawExtraWagons(g, v) {
+  const cam = Math.floor(sim.dist);
+  for (const w of extraWagons()) {
+    const x = Math.round(w.u - cam + ANCHOR_X) - 14;
+    if (x > W || x + 28 < 0) continue;
+    g.drawImage(cached(v, 'wagon' + w.kind, 28, 19, (gg, p) => paintWagon(gg, p, w.kind)), x, 157);
   }
 }
 
@@ -2755,7 +2921,8 @@ const LAST_STATION = STATIONS.length - 1;
 
 // Fixed furniture positions for one station (same in every lighting)
 function layoutStation(st) {
-  if (st.halt || st.bare) return [];
+  if (st.bare) return [];
+  if (st.halt) return [{ type: 'sleeper', x: 70, y: 165 }, { type: 'bricks', x: 150, y: 166 }, { type: 'sleeper', x: 232, y: 165 }];   // makeshift seats
   const rng = mulberry32(900 + st.index * 77);
   const [L, R] = st.platform, items = [];
   const clear = x => x > L + 6 && x < R - 12 && (x < PLAT.STALL_X - 10 || x > PLAT.STALL_X + 36) &&
@@ -2840,6 +3007,14 @@ function buildProps(p, lit) {
     stall: prop(27, 26, 0, 25, g => paintStall(g, p, lit)),
     stallCart: prop(27, 26, 0, 25, g => paintStall(g, p, lit, true)),
     basket0: fishBasket(p, 0), basket1: fishBasket(p, 1), basket2: fishBasket(p, 2),
+    sleeper: prop(13, 4, 1, 3, g => {                                   // a discarded wooden railway sleeper
+      rect(g, 0, 0, 13, 3, p.brown); rect(g, 0, 0, 13, 1, p.tan); rect(g, 0, 2, 13, 1, p.brownDark);
+      px(g, 3, 1, p.brownDark); px(g, 8, 1, p.brownDark); rect(g, 12, 0, 1, 3, p.brownDark);
+    }),
+    bricks: prop(11, 7, 0, 6, g => {                                    // a pile of old bricks
+      for (const [x, y, w] of [[0, 4, 3], [4, 4, 3], [8, 4, 3], [2, 2, 3], [6, 2, 3], [4, 0, 3]]) { rect(g, x, y, w, 2, (x + y) % 3 ? p.rust : p.red); px(g, x, y, p.brown); }
+      rect(g, 0, 6, 11, 1, p.brownDark);
+    }),
     shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4),
     // plywood tea chests, banded and stencilled, waiting for the goods train
     chests: prop(11, 10, 5, 9, g => {
@@ -3054,6 +3229,7 @@ const BACKDROPS = {
   city:  { layer: 'far', sx: -300, y: 62,  build: buildCity },    // Dhaka skyline
   bottoli: { layer: 'mid', sx: -420, y: 56, build: buildBottoli }, // the old terminal and its yard
   jhawtola: { layer: 'mid', sx: -20, y: 72, build: buildJhawtola }, // Jhawtola's station building
+  dewanhat: { layer: 'mid', sx: -220, y: 74, build: buildDewanhat }, // the road overpass above the line
   foteyabad: { layer: 'mid', sx: -5, y: 60, build: buildFoteyabad }, // Foteyabad's red-brick station
   cu: { layer: 'mid', sx: -100, y: 60, build: buildCU },            // the university station, far side
   sholoshahar: { layer: 'mid', sx: -5, y: 66, build: buildSholoshohor }, // the junction's station building and signal cabin
@@ -3130,14 +3306,15 @@ function colonialBuilding(g, p, lit, bx, base, w) {
 
 // A heavy steel buffer stop at the end of a yard line: a striped beam on a
 // braced post, with the sprung buffer head pointing along the track
-function bufferStop(g, p, x, wy) {
-  rect(g, x - 7, wy + 9, 17, 1, p.grayDark);
-  rect(g, x + 4, wy - 3, 3, 12, p.grayDark); rect(g, x + 4, wy - 3, 1, 12, p.gray);
-  for (let k = 0; k < 9; k++) px(g, x + 7 + (k >> 1), wy + 1 + k, p.grayDark);
-  rect(g, x, wy - 3, 4, 10, p.red);
-  for (let y = wy - 2; y < wy + 7; y += 3) rect(g, x, y, 4, 1, p.white);
-  rect(g, x - 4, wy, 4, 5, p.grayLight); rect(g, x - 4, wy, 4, 1, p.white); rect(g, x - 4, wy + 4, 4, 1, p.gray);
-  rect(g, x - 2, wy - 2, 1, 2, p.grayLight);
+function bufferStop(g, p, x, wy, rusty) {
+  rect(g, x - 7, wy + 9, 17, 1, rusty ? p.brown : p.grayDark);
+  rect(g, x + 4, wy - 3, 3, 12, rusty ? p.rust : p.grayDark); rect(g, x + 4, wy - 3, 1, 12, rusty ? p.brown : p.gray);
+  for (let k = 0; k < 9; k++) px(g, x + 7 + (k >> 1), wy + 1 + k, rusty ? p.rust : p.grayDark);
+  rect(g, x, wy - 3, 4, 10, rusty ? p.rust : p.red);
+  for (let y = wy - 2; y < wy + 7; y += 3) rect(g, x, y, 4, 1, rusty ? p.brown : p.white);
+  rect(g, x - 4, wy, 4, 5, rusty ? p.brown : p.grayLight); rect(g, x - 4, wy, 4, 1, rusty ? p.rust : p.white); rect(g, x - 4, wy + 4, 4, 1, rusty ? p.brownDark : p.gray);
+  rect(g, x - 2, wy - 2, 1, 2, rusty ? p.rust : p.grayLight);
+  if (rusty) for (let j = -6; j < 8; j += 2) { px(g, x + j, wy + 8, p.green); px(g, x + j, wy + 7, p.grass); if (j % 4 === 0) px(g, x + j, wy + 6, p.green); }   // weeds at its feet
 }
 
 // Bottoli, the old Chattogram terminal (1896): the red colonial building
@@ -3148,14 +3325,23 @@ function bufferStop(g, p, x, wy) {
 // Dewanhat. Sprite row 0 is screen y 56; screen x -420 is its left edge
 // while we stand here.
 function buildBottoli(p, lit) {
-  const W = Math.round(740 + (STATIONS[1].dist + 260 * SCALE) / 2), H = 90, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1896), END = W - 72;
+  const W = Math.round(792 + STATIONS[1].dist / 2), H = 90, [c, g] = makeCanvas(W, H), L = x => x + 420, rng = mulberry32(1896), END = W - 72;
   rect(g, 0, 70, W, H - 70, p.gray);                                     // yard ballast, y 126..145
   ditherRect(g, 0, 68, W, 2, p.gray, 8);
   for (let i = 0; i < W * 4; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, 70, H - 1), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
+  const RUST = 420;                                                      // the last stretch is abandoned: rusty and overgrown
   const line = wy => {                                                   // sleepers, two rails right under the wheels, a buffer stop
     for (let x = 2; x < END; x += 8) { rect(g, x, wy + 7, 4, 3, p.brown); px(g, x, wy + 7, p.tan); }
-    rect(g, 0, wy + 7, END, 1, p.grayLight); rect(g, 0, wy + 8, END, 1, p.grayDark);
-    bufferStop(g, p, END, wy);
+    rect(g, 0, wy + 7, END - RUST, 1, p.grayLight); rect(g, 0, wy + 8, END - RUST, 1, p.grayDark);
+    for (let x = END - RUST; x < END; x++) {
+      const k = (x - (END - RUST)) / RUST;                               // 0 .. 1 towards the end
+      px(g, x, wy + 7, k > 0.35 || hash2(x, wy) < k * 2 ? p.rust : p.grayLight); px(g, x, wy + 8, k > 0.35 ? p.brown : p.grayDark);
+      if (hash2(x, wy + 3) < 0.1 + 0.5 * k) {                            // weeds growing up through the sleepers
+        const top = 1 + Math.floor(hash2(x, wy + 9) * (2 + 4 * k));
+        for (let j = 0; j <= top; j++) px(g, x, wy + 6 - j, hash2(x + j, wy) < 0.5 ? p.green : p.grass);
+      }
+    }
+    bufferStop(g, p, END, wy, true);
   };
   line(68); line(79);
   colonialBuilding(g, p, lit, L(20), 72, 262);
@@ -3434,27 +3620,109 @@ function buildCU(p, lit) {
   return c;
 }
 
+// --- the Dewanhat road overpass: a heavy concrete deck right across the picture on
+// stained pillars; traffic crawls along it (drawn live) and it shades the line below
+const DEW_W = 760;
+function buildDewanhat(p, lit) {
+  const W = DEW_W, H = 56, [c, g] = makeCanvas(W, H), rng = mulberry32(31);
+  // shadow under the deck, darkest just below it: a dither of ink over whatever is behind
+  ditherRect(g, 0, 22, W, 9, p.ink, 10); ditherRect(g, 0, 31, W, 10, p.ink, 7); ditherRect(g, 0, 41, W, 14, p.ink, 4);
+  for (const px0 of [81, 226, 370, 516, 661]) {                          // pillars
+    const x = px0 - 7;
+    rect(g, x, 26, 14, 28, p.gray);
+    rect(g, x, 26, 2, 28, p.grayLight); rect(g, x + 12, 26, 2, 28, p.grayDark);
+    for (let y = 32; y < 54; y += 7) rect(g, x, y, 14, 1, p.grayDark);                              // formwork lines
+    rect(g, x - 2, 22, 18, 5, p.gray); rect(g, x - 2, 22, 18, 1, p.grayLight);                      // capital
+    rect(g, x - 2, 52, 18, 3, p.grayDark);                                                          // plinth
+    for (let n = 0; n < 3; n++) { const sx = x + randInt(rng, 2, 11), sl = randInt(rng, 8, 20); for (let j = 0; j < sl; j++) px(g, sx, 27 + j, p.grayDark); }   // damp streaks
+    for (let y = 40; y < 53; y++) for (let xx = 0; xx < 14; xx++)                                   // moss creeping up from the bottom
+      if (rng() < (y - 38) / 18) px(g, x + xx, y, rng() < 0.5 ? p.greenDark : rng() < 0.6 ? p.green : p.grass);
+    for (let n = 0; n < 2; n++) {                                                                   // faded election posters
+      const py = 29 + n * 10 + randInt(rng, 0, 2), pxx = x + randInt(rng, 2, 6), faded = rng() < 0.5;
+      rect(g, pxx, py, 6, 8, faded ? p.cloudShade : p.white);
+      rect(g, pxx + 1, py + 1, 4, 2, faded ? p.grayDark : p.ink); rect(g, pxx + 1, py + 4, 4, 1, p.grayDark); rect(g, pxx + 1, py + 6, 3, 1, p.grayDark);
+      px(g, pxx + 5, py + 7, p.gray); px(g, pxx, py, p.gray);                                       // torn corners
+    }
+  }
+  rect(g, 0, 22, W, 4, p.gray); rect(g, 0, 22, W, 1, p.grayLight);                                  // girders under the deck
+  rect(g, 0, 12, W, 10, p.grayLight); rect(g, 0, 12, W, 1, p.cloudShade);                           // the slab
+  rect(g, 0, 19, W, 3, p.gray); rect(g, 0, 21, W, 1, p.grayDark);
+  for (let x = 20; x < W; x += 40) rect(g, x, 12, 1, 10, p.gray);                                   // expansion joints
+  rect(g, 0, 8, W, 1, p.cloudShade);                                                                // railing: a rail on posts
+  for (let x = 3; x < W; x += 24) rect(g, x, 8, 2, 5, p.grayLight);
+  return c;
+}
+
+const DEW_VEH = {                                                        // side views of what crosses the deck; R paints mirrored for the other direction
+  bus:   { w: 24, h: 12, paint: (R, P, lit) => { R(0, 1, 24, 9, P.navy); R(0, 0, 24, 1, P.slate); R(1, 2, 21, 3, lit ? PALETTE.glow : P.skyMid); R(0, 6, 24, 1, P.red); R(2, 10, 4, 2, P.ink); R(17, 10, 4, 2, P.ink); R(23, 7, 1, 2, PALETTE.glow); } },
+  cng:   { w: 11, h: 8,  paint: (R, P, lit) => { R(0, 2, 11, 4, P.greenDark); R(1, 0, 8, 2, P.ink); R(9, 2, 2, 2, lit ? PALETTE.glow : P.skyMid); R(1, 6, 3, 2, P.ink); R(7, 6, 3, 2, P.ink); } },
+  rick:  { w: 10, h: 11, paint: (R, P, lit) => { R(0, 0, 5, 4, P.rust); R(0, 4, 5, 1, P.ink); R(5, 3, 2, 3, P.ink); R(5, 1, 2, 2, P.brown); R(0, 5, 8, 1, P.grayDark); R(0, 6, 3, 5, P.ink); R(6, 6, 3, 5, P.ink); } },
+  truck: { w: 22, h: 13, paint: (R, P, lit) => { R(0, 1, 15, 8, P.grayDark); R(0, 0, 15, 1, P.brown); R(15, 3, 7, 6, P.navy); R(19, 4, 3, 2, lit ? PALETTE.glow : P.skyMid); R(2, 9, 18, 1, P.ink); R(2, 10, 4, 3, P.ink); R(15, 10, 4, 3, P.ink); } },
+  bike:  { w: 6,  h: 7,  paint: (R, P, lit) => { R(1, 0, 2, 3, P.ink); R(0, 3, 5, 2, P.red); R(0, 5, 2, 2, P.ink); R(4, 5, 2, 2, P.ink); } },
+};
+let DEW_TRAFFIC = null;
+function dewTraffic() {
+  if (!DEW_TRAFFIC) {
+    const rng = mulberry32(31), kinds = ['bus', 'cng', 'cng', 'rick', 'truck', 'bike', 'cng', 'rick', 'bus'];
+    DEW_TRAFFIC = Array.from({ length: 13 }, (_, i) => ({ kind: kinds[i % kinds.length], dir: i % 3 === 2 ? -1 : 1, speed: 4 + rng() * 11, x0: rng() * DEW_W }));
+  }
+  return DEW_TRAFFIC;
+}
+const overpassLeft = () => BACKDROPS.dewanhat.sx + Math.floor(STATIONS[1].dist * 0.5) - Math.floor(sim.dist * 0.5);   // same stepping as drawBackdrops
+function drawOverpassTraffic(g, v) {
+  const left = overpassLeft();
+  if (left > W || left + DEW_W < 0) return;
+  const surface = BACKDROPS.dewanhat.y + 12;
+  for (const t of dewTraffic()) {
+    const V = DEW_VEH[t.kind], pos = (((t.x0 + t.dir * t.speed * sim.clock) % DEW_W) + DEW_W) % DEW_W, x = Math.round(left + pos) - V.w;
+    if (x > W || x + V.w < 0) continue;
+    const R = (dx, dy, w, h, col) => { g.fillStyle = col; g.fillRect(t.dir > 0 ? x + dx : x + V.w - dx - w, surface - V.h + dy, w, h); };
+    V.paint(R, v.p, v.lit);
+  }
+}
+function drawOverpassShade(g, v) {                                      // the deck's shadow lies over the train and the tracks
+  const a = overpassLeft(), b = a + DEW_W;
+  if (b < 0 || a > W) return;
+  g.fillStyle = v.p.ink;
+  for (let x = Math.max(0, a); x < Math.min(W, b); x++) {
+    g.globalAlpha = 0.3 * Math.max(0, Math.min(1, (x - a) / 40, (b - x) / 40));
+    g.fillRect(x, 118, 1, 44);
+  }
+  g.globalAlpha = 1;
+}
+
 // An unofficial stop (Dewanhat): no platform, only gravel and trodden earth
 function buildHaltGround(p, w, seed, green) {
   const rng = mulberry32(2000 + seed), [c, g] = makeCanvas(w, 19);
   for (let y = 0; y < 19; y++)
     for (let x = 0; x < w; x++) {
-      const k = rng();
-      if (green && y >= 3) {                                               // grass with a trodden path through it
-        const path = y >= 8 && y <= 15 && hash2(x >> 2, y) < 0.62;
-        px(g, x, y, path ? (k < 0.3 ? p.tan : k < 0.6 ? p.brown : p.brownDark) : k < 0.35 ? p.green : k < 0.65 ? p.grass : k < 0.85 ? p.grassLight : p.greenDark);
-        continue;
-      }
-      px(g, x, y, y < 3 ? (k < 0.5 ? p.gray : k < 0.8 ? p.grayDark : p.grayLight)
-                        : k < 0.18 ? p.brownDark : k < 0.3 ? p.tan : k < 0.34 ? p.rust : p.brown);
+      const k = rng(), mix = y < 3 ? 0 : y > 6 ? 1 : (bayer(x, y) < (y - 2) * 4 ? 1 : 0);     // dark ballast above, then dirt
+      px(g, x, y, !mix ? (k < 0.45 ? p.grayDark : k < 0.78 ? p.gray : k < 0.9 ? p.ink : p.grayLight)
+                       : green ? (k < 0.35 ? p.green : k < 0.65 ? p.grass : k < 0.85 ? p.grassLight : p.greenDark)
+                               : (k < 0.22 ? p.brownDark : k < 0.34 ? p.tan : k < 0.38 ? p.rust : p.brown));
     }
-  for (let x = 0; x < w; x++) if (bayer(x, 3) < 8) px(g, x, 3, p.gray);
-  for (let i = 0; i < w / 5; i++) {                                      // weeds
-    const x = randInt(rng, 0, w - 1), y = randInt(rng, 5, 17);
-    px(g, x, y, rng() < 0.5 ? p.grassLight : p.grass);
-    if (rng() < 0.5) px(g, x, y - 1, p.grass);
+  for (let n = 0; n < w / 9; n++) {                                        // patchy, dusty weeds
+    const cx = randInt(rng, 0, w - 1), cy = randInt(rng, 8, 17), r = randInt(rng, 2, 4);
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r * r || rng() < 0.5) continue;
+      const x = cx + dx, y = cy + dy;
+      if (x >= 0 && x < w && y > 6 && y < 19) px(g, x, y, rng() < 0.4 ? p.green : rng() < 0.6 ? p.grass : rng() < 0.5 ? p.greenDark : p.tan);   // dust on the leaves
+    }
   }
-  for (let i = 0; i < w / 14; i++) px(g, randInt(rng, 0, w - 1), randInt(rng, 6, 18), p[pick(rng, ['white', 'red', 'blue', 'paddy'])]);   // litter
+  for (let n = 0; n < Math.max(3, Math.round(w / 90)); n++) {              // footpaths wind up from the front to the tracks
+    const x0 = randInt(rng, 10, w - 10), ph = rng() * 6, pw = randInt(rng, 3, 5);
+    for (let y = 18; y >= 0; y--) {
+      const cx = x0 + Math.round(Math.sin(y * 0.55 + ph) * 3 + (18 - y) * 0.25);
+      for (let dx = -pw; dx <= pw; dx++) {
+        const x = cx + dx;
+        if (x < 0 || x >= w || Math.abs(dx) > pw - (rng() < 0.3 ? 1 : 0)) continue;
+        const k = rng();
+        px(g, x, y, y < 5 ? (k < 0.6 ? p.grayLight : p.gray) : k < 0.5 ? p.tan : k < 0.8 ? p.cream : p.brown);   // trodden pale
+      }
+    }
+  }
+  for (let i = 0; i < w / 5; i++)                                          // litter: wrappers and plastic bags
+    px(g, randInt(rng, 0, w - 1), randInt(rng, 2, 18), p[pick(rng, ['white', 'white', 'blue', 'red', 'skyMid', 'orange'])]);
   return c;
 }
 
@@ -3620,6 +3888,7 @@ function makeDesign(rng, kind) {
     case 'vendor':   d.top = 'white'; [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'tray'; break;
     case 'guard':    d.top = 'white'; d.bottom = 'navy'; break;
     case 'soldier':  d.top = 'greenDark'; d.bottom = 'green'; d.carry = 'rifle'; break;
+    case 'peanut':   d.top = pick(rng, SHIRTS); [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'badam'; break;     // a lone peanut seller
     case 'hawker':   d.top = pick(rng, SHIRTS); [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'basket'; break;
   }
   if (['lungi', 'trousers', 'sari', 'kameez'].includes(kind)) {
@@ -3663,7 +3932,7 @@ function paintPerson(g, d, p, frame) {
   if (d.kind === 'guard' || d.kind === 'soldier') P(4, 0, d.kind === 'guard' ? 'navy' : 'greenDeep');   // cap peak
   if (d.kind === 'elder') P(3 + lean, dy + 2, 'white');   // white beard
 
-  const checked = d.kind === 'lungi' || d.kind === 'porter' || d.kind === 'vendor' || d.kind === 'hawker';
+  const checked = d.kind === 'lungi' || d.kind === 'porter' || d.kind === 'vendor' || d.kind === 'hawker' || d.kind === 'peanut';
   const lower = (x, y) => checked ? ((x + y) & 1 ? d.cloth : d.cloth2) : (d.kind === 'sari' ? d.cloth : d.bottom);
 
   if (sit) {
@@ -3713,6 +3982,7 @@ function paintPerson(g, d, p, frame) {
   const hand = frame === 6 ? [4, 3] : frame === 5 ? [4, 5] : walk === 1 ? [4, 6] : walk === 3 ? [0, 6] : [3, 7];
   switch (d.carry) {
     case 'rifle':    R(4, 2, 1, 9, 'ink'); P(4, 1, 'grayLight'); P(3, 6, s); break;               // rifle held upright
+    case 'badam':    R(3, 6, 4, 3, 'tan'); R(3, 6, 4, 1, 'brown'); P(4, 5, s); P(5, 5, 'brownDark'); P(4, 6, 'paddy'); P(5, 7, 'paddy'); break;   // a small basket of peanuts
     case 'bag':      R(4, 7, 2, 2, d.bagColor); P(4, 6, s); break;
     case 'backpack': R(0, 3, 1, 4, d.bagColor); P(hand[0], hand[1], s); break;
     case 'bundle':   R(0, -2, 5, 2, d.bagColor); P(2, -3, d.bagColor); P(4, 0, s); P(4, 1, s); break;
@@ -3796,19 +4066,21 @@ function populateStation(st) {
   const rng = mulberry32((Math.random() * 1e9) | 0);    // a different crowd every trip
   const [L, R] = st.platform;
   const seated = kind => { const d = makeDesign(rng, kind); d.carry = null; return d; };
+  const locals = st.extras.includes('locals');                       // a couple of locals in lungis or casual shirts, no luggage
+  const localDesign = r => { const d = makeDesign(r, pick(r, ['lungi', 'lungi', 'trousers'])); d.carry = null; return d; };
   const waiting = Array.isArray(st.crowd) ? st.crowd[0] + Math.floor(rng() * (st.crowd[1] - st.crowd[0] + 1)) : st.crowd;
   for (let i = 0; i < waiting; i++)                    // waiting to board, spread along the train
-    spawnPerson(st, makeDesign(rng), 24 + rng() * 244, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');
+    spawnPerson(st, locals ? localDesign(rng) : makeDesign(rng), 24 + rng() * 244, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');
   for (let i = 0; i < st.idle; i++) {                   // just standing about
     let x;
     do x = L + 10 + rng() * (R - L - 20); while (x > PLAT.STALL_X - 4 && x < PLAT.STALL_X + 34);
     spawnPerson(st, makeDesign(rng), x, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'idle');
   }
   for (const it of st.layout)                           // someone resting on a bench
-    if (it.type === 'bench' && rng() < 0.5)
+    if ((it.type === 'bench' && rng() < 0.5) || ((it.type === 'sleeper' || it.type === 'bricks') && rng() < 0.4))
       spawnPerson(st, seated(pick(rng, ['lungi', 'trousers', 'sari', 'kameez', 'elder'])), it.x + 3, it.y, rng() < 0.5 ? 1 : -1, 'sit');
   if (!st.halt && !st.bare) spawnPerson(st, seated(pick(rng, ['lungi', 'trousers'])), PLAT.STALL_X + 31, PLAT.STALL_Y + 2, -1, 'sip');
-  const vendor = spawnPerson(st, makeDesign(rng, 'vendor'), 60 + rng() * 150, st.tight ? 164 : PLAT.WALK_MAX, 1, 'patrol');
+  const vendor = spawnPerson(st, makeDesign(rng, st.extras.includes('peanuts') ? 'peanut' : 'vendor'), 60 + rng() * 150, st.tight ? 164 : PLAT.WALK_MAX, 1, 'patrol');
   vendor.ax = Math.max(L + 20, -120);
   vendor.bx = Math.min(R - 46, 440);
   vendor.speed = 9;
@@ -5842,12 +6114,14 @@ function renderWorld(g, v) {
   drawBackdrops(g, v, 'far');                                             //    Dhaka skyline
   drawTerrain(g, v, TL.far);                                              // 3. distant land
   drawTerrain(g, v, TL.mid);                                              // 4. fields, river, hills
-  drawBackdrops(g, v, 'mid');                                             //    Bottoli's building and yard
+  drawBackdrops(g, v, 'mid');
+  drawOverpassTraffic(g, v);                                             //    Bottoli's building and yard
   drawBirds(g, v);
   drawLine(g, v);                                                         // 5. poles, track, bridge
   drawTrain(g, v);
   drawSmoke(g, v);
-  drawTruss(g, v, true);                                                  //    lattice over the train
+  drawTruss(g, v, true);
+  drawOverpassShade(g, v);                                                  //    lattice over the train
   drawTerrain(g, v, TL.fg, drawReflection);                               // 6. near ground / water
   drawExtraTracks(g, v);
   drawCrossings(g, v);                                                  //    the other lines at Bottoli
