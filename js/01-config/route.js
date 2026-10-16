@@ -1,0 +1,51 @@
+'use strict';
+// js/01-config/route.js
+// Defines: ROUTE, STATION_DEFAULTS
+
+// The route, in travel order. To add a station, add an entry: only en,
+// bn and km are required, everything else falls back to STATION_DEFAULTS.
+//   en / bn   English and Bangla names shown on the board and banner
+//   code      three letters for the route map
+//   km        distance from Kamalapur along the line (approximate)
+//   platform  [left, right] screen x of the platform while stopped here
+//   roof      'umbrella' | 'canopy' | 'shelter'
+//   crowd     passengers waiting to board, alight: passengers getting off
+//   idle      extra people standing around
+//   backdrop  extra scenery from BACKDROPS drawn near the station (the
+//             landscape along the line itself comes from TERRAIN below)
+//   extras    station-specific props / characters ('porter', 'fish', 'chests')
+const ROUTE = [
+  // km = distance from Bottoli along the line (whole-km figures from rail station listings; Dewanhat is an estimate)
+  { en: 'BOTTOLI', bn: 'বটতলী', code: 'BTL', km: 0,
+    platform: [-330, 650], roof: 'shed', roofColor: 'rust', oldSlab: true, crowd: 44, alight: 0, idle: 10,
+    backdrop: ['city', 'bottoli'], extras: ['porter', 'clutter'] },
+  { en: 'DEWANHAT', bn: 'দেওয়ানহাট', code: 'DWH', km: 2,           // only a stoppage: no platform, no roof, nothing
+    platform: [-40, 360], roof: 'shelter', halt: true, crowd: [0, 2], alight: 1, idle: 0,
+    backdrop: ['dewanhat'], extras: ['peanuts', 'locals'] },
+  { en: 'JHAWTOLA', bn: 'ঝাউতলা', code: 'JHT', km: 5,
+    platform: [-40, 360], roof: 'shelter', noRoof: true, crowd: 16, alight: 6, idle: 2,   // a solid station building, but no shed over the platform
+    backdrop: ['jhawtola'], extras: ['hawkers'],
+    slab: 'bleached',              // cracked, sun-bleached concrete with a faded safety line
+    ironLamps: true,               // tall free-standing iron lamp posts and wood-and-iron benches (no roof to hang them from)
+    students: true,                // the crowd is mostly CU students with backpacks and bags
+    liveStall: true,               // the tea stall: glowing clay stove, jars, hanging snacks, students sipping
+    jhau: [8, 302, 317] },       // x of the Jhau trees at the platform's ends (they dapple the slab)
+  { en: 'POLYTECHNIC', bn: 'পলিটেকনিক', code: 'PLT', km: 6,
+    platform: [4, 318], roof: 'shelter', bare: true, crowd: [0, 2], alight: 1, idle: 0 },     // just the platform: nothing on it, no shed
+  { en: 'SHOLOSOHOR', bn: 'ষোলশহর', code: 'SLS', km: 8,
+    platform: [-90, 420], roof: 'canopy', roofColor: 'blue', crowd: 78, alight: 8, idle: 4,
+    backdrop: ['sholoshahar'] },
+  { en: 'CANTONMENT', bn: 'ক্যান্টনমেন্ট', code: 'CNT', km: 14,
+    platform: [-40, 360], roof: 'canopy', roofColor: 'green', crowd: 16, alight: 8, idle: 2,
+    backdrop: ['cantt'], extras: ['army'] },       // an army train stands behind ours, with guards
+  { en: 'CHOUDHURY HAT', bn: 'চৌধুরীহাট', code: 'CDH', km: 17,
+    platform: [-40, 360], roof: 'shelter', halt: true, green: true, crowd: 7, alight: 4, idle: 1 },   // a stoppage in the greenery, like Dewanhat
+  { en: 'FOTEYABAD', bn: 'ফতেয়াবাদ', code: 'FTB', km: 19,
+    platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 8, alight: 5, idle: 2,     // a better Jhawtola: red brick, no shed
+    backdrop: ['foteyabad'] },
+  { en: 'CHITTAGONG UNIV.', bn: 'চট্টগ্রাম বিশ্ববিদ্যালয়', code: 'CU', km: 22,
+    platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 0, alight: 40, idle: 2,
+    backdrop: ['cu'], extras: ['shops', 'vendors'] },
+];
+const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'green',
+                           crowd: 4, alight: 3, idle: 3, backdrop: [], extras: [] };
