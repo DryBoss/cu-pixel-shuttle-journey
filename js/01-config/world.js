@@ -10,7 +10,7 @@ const SCALE = CONFIG.PX_PER_KM / 700;                 // the distances below wer
 const TERRAIN = [
   { id: 'closed' },                       // out of Bottoli: dense, buildings shoulder to shoulder against the line
   { id: 'colony', at: [1, 300 * SCALE] }, // past Dewanhat: the old Railway Colony, the city opening up into greenery, all the way to Jhawtola
-  { id: 'slum',   at: [2, 150 * SCALE] },
+  { id: 'khulshi', at: [2, 150 * SCALE] },       // Jhawtola to Polytechnic: along the Khulshi hills, a closed-in green corridor of boundary walls and shade trees
   { id: 'closed', at: [3, 100 * SCALE] },
   { id: 'slum',   at: [4, -500 * SCALE] },
   { id: 'mill',   at: [4, 1500 * SCALE] },        // the huge jute mill, midway to Cantonment

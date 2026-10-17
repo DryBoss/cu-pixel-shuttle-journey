@@ -16,7 +16,8 @@ function buildStationSprites(st, p) {
 }
 
 function slabFor(st, p, w) {
-  const slab = (st.slab === 'bleached' ? buildBleachedSlab : st.oldSlab ? buildOldSlab : buildSlab)(p, w, st.index);
+  const slab = (st.slab === 'weathered' ? buildWeatheredSlab : st.slab === 'bleached' ? buildBleachedSlab : st.oldSlab ? buildOldSlab : buildSlab)(p, w, st.index);
   if (st.jhau) dappleSlab(slab, p, st.platform[0], st.jhau);
+  if (st.shade) dappleSlab(slab, p, st.platform[0], st.shade, 38, 0.8);                   // shade under overhanging canopies
   return slab;
 }

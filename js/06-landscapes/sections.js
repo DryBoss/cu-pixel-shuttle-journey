@@ -44,6 +44,12 @@ const SECTIONS = {
     mid: { spawn: colonyMid, column: colonyCol, ground: colonyMidGround },
     fg:  { spawn: colonyFg, column: colonyCol, ground: colonyFgGround },
   },
+  khulshi: {
+    name: 'KHULSHI', sky: 'normal', birds: ['egret', 0.05],
+    far: { spawn: khulshiFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: khulshiMid, ground: khulshiMidGround },
+    fg:  { spawn: khulshiFg, ground: khulshiFgGround },
+  },
   river: {
     name: 'MEGHNA', sky: 'normal', birds: ['gull', 0.4],
     far: {

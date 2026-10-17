@@ -1,6 +1,6 @@
 'use strict';
 // js/10-stations/slabs.js
-// Defines: buildOldSlab, buildSlab, buildBleachedSlab, dappleSlab
+// Defines: buildOldSlab, buildSlab, buildBleachedSlab, buildWeatheredSlab, dappleSlab
 
 // Raised concrete platform seen from slightly above: coping, yellow safety
 // line along the track edge, paved surface, then the front face.
@@ -75,13 +75,48 @@ function buildBleachedSlab(p, w, seed) {
 
 // Dappled shade under a Jhau tree standing at screen x tx (ragged, wind-flickering shade is faked
 // as fixed dithered blotches on the slab)
-function dappleSlab(c, p, L, xs) {
+function dappleSlab(c, p, L, xs, spread = 24, strength = 0.5) {
   const g = c.getContext('2d');
   for (const tx of xs)
-    for (let dx = -24; dx <= 24; dx++)
+    for (let dx = -spread; dx <= spread; dx++)
       for (let y = 3; y < 23; y++) {
-        const x = tx - L + dx, dens = 0.5 * (1 - Math.abs(dx) / 25) * (1 - Math.abs(y - 12) / 14);
+        const x = tx - L + dx, dens = strength * (1 - Math.abs(dx) / (spread + 1)) * (1 - Math.abs(y - 12) / 14);
         if (x < 1 || x >= c.width - 1) continue;
         if (hash2((x + 3) >> 1, (y + 5) >> 1) < dens) px(g, x, y, hash2(x, y) < 0.35 ? p.gray : p.cloudShade);
       }
+}
+
+// Polytechnic's naked platform: years of sun and monsoon with nobody caring for it. Bleached patches,
+// dark mould stains, puddles that never quite dry, cracks with bright weeds, and weeds creeping over the edges
+function buildWeatheredSlab(p, w, seed) {
+  const c = buildBleachedSlab(p, w, seed), g = c.getContext('2d'), rng = mulberry32(3300 + seed);
+  const blob = (cx, cy, rx, ry, fn) => {
+    for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) {
+      const d = (x / rx) ** 2 + (y / ry) ** 2 + (hash2(cx + x, cy + y) - 0.5) * 0.5;
+      if (d < 1) fn(cx + x, cy + y, d);
+    }
+  };
+  for (let i = 0; i < w / 14; i++) {                                     // mould and damp: dark grey stains, thickest in the low corners
+    const cx = randInt(rng, 0, w - 1), cy = randInt(rng, 4, 22), rx = randInt(rng, 3, 10), ry = randInt(rng, 1, 4);
+    blob(cx, cy, rx, ry, (x, y, d) => { if (x > 0 && x < w - 1 && y > 2 && y < 24) px(g, x, y, d < 0.45 && bayer(x, y) < 11 ? p.grayDark : bayer(x, y) < 9 ? p.gray : p.cloudShade); });
+  }
+  for (let i = 0; i < w / 60; i++) {                                     // puddles: a dark wet rim round a pale sky reflection
+    const cx = randInt(rng, 10, w - 11), cy = randInt(rng, 8, 19), rx = randInt(rng, 6, 13), ry = randInt(rng, 2, 4);
+    blob(cx, cy, rx + 1, ry + 1, (x, y) => { if (bayer(x, y) < 10) px(g, x, y, p.grayDark); });
+    blob(cx, cy, rx, ry, (x, y, d) => px(g, x, y, d < 0.35 && (x + y) % 3 === 0 ? p.white : d < 0.7 ? p.skyLight : p.skyMid));
+    px(g, cx - 2, cy - 1, p.white); px(g, cx - 1, cy - 1, p.white);
+  }
+  for (let i = 0; i < w / 5; i++) {                                      // weeds sprouting from the cracks and joints
+    const x = randInt(rng, 2, w - 3), y = randInt(rng, 4, 22);
+    if (rng() < 0.7) {
+      px(g, x, y, p.green);
+      px(g, x, y - 1, p.grassLight); if (rng() < 0.6) px(g, x - 1, y - 2, p.grassLight); if (rng() < 0.5) px(g, x + 1, y - 2, p.grassLight);
+    }
+  }
+  for (let x = 1; x < w - 1; x++) {                                      // creeping over the track-side edge and the front face
+    if (hash2(x >> 1, 91) < 0.22) { px(g, x, 0, p.grassLight); if (rng() < 0.5) px(g, x, 1, p.green); }
+    if (hash2(x >> 2, 92) < 0.18) { const l = randInt(rng, 2, 6); for (let j = 0; j < l; j++) px(g, x, 24 + j, j % 2 ? p.green : p.grassLight); }
+    if (hash2(x >> 3, 93) < 0.3) { const l = randInt(rng, 4, 10); for (let j = 0; j < l; j++) if (bayer(x, 25 + j) < 12 - j) px(g, x, 25 + j, p.grayDark); }   // mould drips down the face
+  }
+  return c;
 }

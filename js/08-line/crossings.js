@@ -45,7 +45,7 @@ function drawCrossings(g, v) {
     rect(g, x0 - 12, 149, 1, 9, p.grayLight);
     if (!closed) continue;
     cr.lanes.forEach((lane, li) => lane.forEach((veh, k) => {
-      const spr = vehSprite(v, veh), cx = x0 + (li ? 25 : 9), base = cr.busy ? 164 + k * 8 : 167 + k * 9;   // busy roads: a longer queue fits on screen
+      const spr = vehSprite(v, veh), cx = x0 + (li ? 25 : 9), base = cr.busy ? 163 + k * 7 : 167 + k * 9;   // busy roads: a longer queue fits on screen
       if (base - spr.height < H) g.drawImage(spr, cx - (spr.width >> 1), base - spr.height + 1);
     }));
   }

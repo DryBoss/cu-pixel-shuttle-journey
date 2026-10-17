@@ -10,8 +10,11 @@ function crossings() {
   // The two crossings between Dewanhat and Jhawtola (through the Railway Colony) are busy local roads:
   // a fixed, colourful queue of white buses, green CNGs and cycle rickshaws waits for the train
   const BUSY = [[[['bus', 'white'], ['cng'], ['rick', 'red']], [['cng'], ['rick', 'skyMid'], ['bus', 'white']]],
-                [[['rick', 'orange'], ['bus', 'white'], ['cng']], [['bus', 'white'], ['cng'], ['rick', 'rose']]]];
-  if (!CROSSINGS) CROSSINGS = [[1, 650, null, BUSY[0]], [1, 1400, null, BUSY[1]], [2, 330], [3, 700], [4, 560], [4, 1250], [5, -1000, ['army', 'jeep', 'army', 'car']]].map(([si, off, kinds, fixed], n) => {
+                [[['rick', 'orange'], ['bus', 'white'], ['cng']], [['bus', 'white'], ['cng'], ['rick', 'rose']]],
+                // Jhawtola crossing: the famous bottleneck, jammed with cycle rickshaws, motorbikes and brightly painted CNGs
+                [[['rick', 'red'], ['bike', 'blue'], ['cngc', 'orange'], ['bike', 'red'], ['rick', 'skyMid']],
+                 [['cngc', 'skyMid'], ['rick', 'rose'], ['bike', 'orange'], ['cngc', 'red'], ['bike', 'blue']]]];
+  if (!CROSSINGS) CROSSINGS = [[1, 650, null, BUSY[0]], [1, 1400, null, BUSY[1]], [2, 260, null, BUSY[2]], [3, 700], [4, 560], [4, 1250], [5, -1000, ['army', 'jeep', 'army', 'car']]].map(([si, off, kinds, fixed], n) => {
     const rng = mulberry32(5150 + n * 31), lanes = [[], []], pool = kinds || VEH_KINDS;
     lanes.forEach((lane, li) => {
       if (fixed) { for (const [kind, col] of fixed[li]) lane.push({ kind, col: col || VEH_COLORS[Math.floor(rng() * VEH_COLORS.length)] }); return; }
@@ -35,6 +38,12 @@ const VEHICLES = {
     rect(g, 1, 0, 8, 2, p.greenDark); rect(g, 0, 2, 10, 8, p.green);
     rect(g, 2, 3, 6, 3, p.indigo); for (let x = 2; x < 8; x += 2) rect(g, x, 3, 1, 3, p.grayDark);
     rect(g, 0, 8, 2, 1, p.red); rect(g, 8, 8, 2, 1, p.red); rect(g, 0, 10, 10, 1, p.greenDark);
+    rect(g, 0, 11, 2, 2, p.ink); rect(g, 8, 11, 2, 2, p.ink);
+  } },
+  cngc: { w: 10, h: 13, paint(g, p, col) {                           // a brightly painted CNG
+    rect(g, 1, 0, 8, 2, p.ink); rect(g, 0, 2, 10, 8, p[col]);
+    rect(g, 2, 3, 6, 3, p.indigo); for (let x = 2; x < 8; x += 2) rect(g, x, 3, 1, 3, p.grayDark);
+    rect(g, 0, 8, 2, 1, p.red); rect(g, 8, 8, 2, 1, p.red); rect(g, 0, 10, 10, 1, p.grayDark);
     rect(g, 0, 11, 2, 2, p.ink); rect(g, 8, 11, 2, 2, p.ink);
   } },
   rick: { w: 9, h: 15, paint(g, p, col) {                           // cycle rickshaw, hood folded

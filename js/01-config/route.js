@@ -31,7 +31,11 @@ const ROUTE = [
     liveStall: true,               // the tea stall: glowing clay stove, jars, hanging snacks, students sipping
     jhau: [8, 302, 317] },       // x of the Jhau trees at the platform's ends (they dapple the slab)
   { en: 'POLYTECHNIC', bn: 'পলিটেকনিক', code: 'PLT', km: 6,
-    platform: [4, 318], roof: 'shelter', bare: true, crowd: [0, 2], alight: 1, idle: 0 },     // just the platform: nothing on it, no shed
+    platform: [4, 318], roof: 'shelter', bare: true, crowd: [4, 8], alight: 4, idle: 0,     // just the platform: nothing on it, no shed
+    backdrop: ['polytechnic'],     // the institute's long boundary wall, with mango and jackfruit crowns over it
+    slab: 'weathered',             // heavily weathered concrete: mould, puddles, bleached patches, weeds in the cracks
+    shade: [60, 175, 285],         // screen x of the crowns' shade on the slab (must match POLY_CROWNS in polytechnic.js, minus 100)
+    students: true },              // Polytechnic students waiting in the open, mostly near the shade
   { en: 'SHOLOSOHOR', bn: 'ষোলশহর', code: 'SLS', km: 8,
     platform: [-90, 420], roof: 'canopy', roofColor: 'blue', crowd: 78, alight: 8, idle: 4,
     backdrop: ['sholoshahar'] },

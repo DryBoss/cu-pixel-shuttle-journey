@@ -31,7 +31,9 @@ function populateStation(st) {
     return d;
   };
   for (let i = 0; i < waiting; i++)                    // waiting to board, spread along the train
-    spawnPerson(st, locals ? localDesign(rng) : st.students ? studentDesign(rng) : makeDesign(rng), 24 + rng() * 244, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');
+    spawnPerson(st, locals ? localDesign(rng) : st.students ? studentDesign(rng) : makeDesign(rng),
+                st.shade && rng() < 0.6 ? Math.max(24, Math.min(268, pick(rng, st.shade) + (rng() * 2 - 1) * 26)) : 24 + rng() * 244,   // some stand in the trees' shade, the rest in the open sun
+                randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');
   for (let i = 0; i < st.idle; i++) {                   // just standing about
     let x;
     do x = L + 10 + rng() * (R - L - 20); while (x > PLAT.STALL_X - 4 && x < PLAT.STALL_X + 34);
@@ -51,10 +53,12 @@ function populateStation(st) {
       const q = spawnPerson(st, makeDesign(rng, 'hawker'), 40 + rng() * 220, randWalkY(rng, st.tight), i ? -1 : 1, 'patrol');
       q.ax = L + 30 + i * 90; q.bx = Math.min(R - 60, 250 + i * 70); q.speed = 7 + rng() * 3;
     }
+  if (!st.bare) {
   const vendor = spawnPerson(st, makeDesign(rng, st.extras.includes('peanuts') ? 'peanut' : 'vendor'), 60 + rng() * 150, st.tight ? 164 : PLAT.WALK_MAX, 1, 'patrol');
   vendor.ax = Math.max(L + 20, -120);
   vendor.bx = Math.min(R - 46, 440);
   vendor.speed = 9;
+  }
   spawnPerson(st, makeDesign(rng, 'guard'), 14, st.tight ? 163 : 167, 1, 'guard');   // front of the platform, flag against concrete
   if (st.extras.includes('porter')) {
     const q = spawnPerson(st, makeDesign(rng, 'porter'), 300, 169, -1, 'porterWait');   // in front of the stall

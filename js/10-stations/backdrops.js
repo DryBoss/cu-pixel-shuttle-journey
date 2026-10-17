@@ -8,6 +8,7 @@ const BACKDROPS = {
   city:  { layer: 'far', sx: -300, y: 62,  build: buildCity },    // Dhaka skyline
   bottoli: { layer: 'mid', sx: -420, y: 56, build: buildBottoli }, // the old terminal and its yard
   jhawtola: { layer: 'mid', sx: -20, y: 52, build: buildJhawtola }, // Jhawtola's station building
+  polytechnic: { layer: 'mid', sx: POLY_SX, y: 46, build: buildPolytechnic }, // Polytechnic's long boundary wall under mango and jackfruit crowns
   dewanhat: { layer: 'mid', sx: -220, y: 74, build: buildDewanhat }, // the road overpass above the line
   foteyabad: { layer: 'mid', sx: -5, y: 60, build: buildFoteyabad }, // Foteyabad's red-brick station
   cu: { layer: 'mid', sx: -100, y: 60, build: buildCU },            // the university station, far side
