@@ -3,13 +3,13 @@
 // Defines: hyacinthEnt, duckEnt
 
 function hyacinthEnt(lx, y, rng) {
-  const w = randInt(rng, 3, 7), ph = rng() * 6, flower = rng() < 0.5;
+  const w = randInt(rng, 4, 8), ph = rng() * 6, flower = rng() < 0.85;
   return { x0: lx - 6, x1: lx + w + 6, z: y, draw(g, v, ox, oy, t) {
     const p = v.p, x = Math.round(lx + Math.sin(t * 0.12 + ph) * 4) + ox, yy = y + oy;
     rect(g, x, yy, w, 1, p.greenDark);
     rect(g, x + 1, yy - 1, w - 2, 1, p.green);
     px(g, x + 2, yy - 2, p.grass);
-    if (flower) px(g, x + w - 2, yy - 2, p.purple);
+    if (flower) { px(g, x + w - 2, yy - 2, p.purple); px(g, x + 1, yy - 2, p.purple); px(g, x + 2, yy - 3, p.white); }
     px(g, x - 1, yy + 1, p.skyLight);
   } };
 }
@@ -23,6 +23,6 @@ function duckEnt(pd, rng) {
     mp(2, -2, 'orange');                                                     // bill
     mpRect(-1, -1, 3, 1, body);
     mp(-2, -2, body);                                                        // tail up
-    if (Math.abs(Math.cos(a)) > 0.3) { mp(-3, 0, 'skyLight'); mp(-4, 1, 'skyLight'); }   // wake
+    if (Math.abs(Math.cos(a)) > 0.3) { mp(-3, 0, 'white'); mp(-4, 1, 'white'); mp(-5, 1, 'skyLight'); mp(-6, 0, 'skyLight'); }   // a white wake
   } };
 }

@@ -13,15 +13,22 @@ function crossings() {
                 [[['rick', 'orange'], ['bus', 'white'], ['cng']], [['bus', 'white'], ['cng'], ['rick', 'rose']]],
                 // Jhawtola crossing: the famous bottleneck, jammed with cycle rickshaws, motorbikes and brightly painted CNGs
                 [[['rick', 'red'], ['bike', 'blue'], ['cngc', 'orange'], ['bike', 'red'], ['rick', 'skyMid']],
-                 [['cngc', 'skyMid'], ['rick', 'rose'], ['bike', 'orange'], ['cngc', 'red'], ['bike', 'blue']]]];
-  if (!CROSSINGS) CROSSINGS = [[1, 650, null, BUSY[0]], [1, 1400, null, BUSY[1]], [2, 260, null, BUSY[2]], [3, 700], [4, 560], [4, 1250], [5, -1000, ['army', 'jeep', 'army', 'car']]].map(([si, off, kinds, fixed], n) => {
-    const rng = mulberry32(5150 + n * 31), lanes = [[], []], pool = kinds || VEH_KINDS;
+                 [['cngc', 'skyMid'], ['rick', 'rose'], ['bike', 'orange'], ['cngc', 'red'], ['bike', 'blue']]],
+                // (the Cantonment border crossing, the last entry below, is neat and disciplined: one dark green army lorry waiting at the gate)
+                // 2 No. Gate: the notorious wide crossing just before Sholosohor, three lanes packed solid with red and green buses, CNGs and motorbikes
+                [[['bus', 'red'], ['cng'], ['bike', 'blue'], ['cngc', 'orange'], ['bike', 'red'], ['bus', 'green']],
+                 [['bus', 'green'], ['cngc', 'skyMid'], ['bike', 'orange'], ['cng'], ['bike', 'blue'], ['bus', 'red']],
+                 [['cng'], ['bus', 'red'], ['bike', 'red'], ['cngc', 'rose'], ['bus', 'green'], ['bike', 'orange']]]];
+  if (!CROSSINGS) CROSSINGS = [[1, 650, null, BUSY[0]], [1, 1400, null, BUSY[1]], [2, 260, null, BUSY[2]], [3, 700], [4, 560], [4, 1250], [5, -1000, ['army', 'jeep', 'army', 'car']], [4, -330, null, BUSY[3], true], [4, 2930, null, [[['army']], []], false, true],
+    // Hathazari: a brown dirt road, rickshaws and bikes, one lone green CNG
+    [6, 520, null, [[['rick', 'red'], ['bike', 'blue'], ['rick', 'skyMid']], [['bike', 'orange'], ['cng'], ['rick', 'rose']]], false, false, true]].map(([si, off, kinds, fixed, wide, neat, dirt], n) => {
+    const rng = mulberry32(5150 + n * 31), lanes = wide ? [[], [], []] : [[], []], pool = kinds || VEH_KINDS;
     lanes.forEach((lane, li) => {
       if (fixed) { for (const [kind, col] of fixed[li]) lane.push({ kind, col: col || VEH_COLORS[Math.floor(rng() * VEH_COLORS.length)] }); return; }
       for (let k = randInt(rng, 1, 3); k > 0; k--)
         lane.push({ kind: pool[Math.floor(rng() * pool.length)], col: VEH_COLORS[Math.floor(rng() * VEH_COLORS.length)] });
     });
-    return { u: STATIONS[si].dist + off * SCALE, lanes, phase: rng() * 6, busy: !!fixed };
+    return { u: STATIONS[si].dist + off * SCALE, lanes, phase: rng() * 6, busy: wide ? 2 : !!fixed, wide: !!wide, neat: !!neat, dirt: !!dirt };
   });
   return CROSSINGS;
 }

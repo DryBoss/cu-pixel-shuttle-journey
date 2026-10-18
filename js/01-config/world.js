@@ -12,10 +12,13 @@ const TERRAIN = [
   { id: 'colony', at: [1, 300 * SCALE] }, // past Dewanhat: the old Railway Colony, the city opening up into greenery, all the way to Jhawtola
   { id: 'khulshi', at: [2, 150 * SCALE] },       // Jhawtola to Polytechnic: along the Khulshi hills, a closed-in green corridor of boundary walls and shade trees
   { id: 'closed', at: [3, 100 * SCALE] },
-  { id: 'slum',   at: [4, -500 * SCALE] },
+  { id: 'nasirabad', at: [4, -750 * SCALE] },    // leaving the quiet institutional walls: the hyper-dense commercial zone of Nasirabad and the 2 No. Gate, the yard widening towards Sholosohor
+  { id: 'slum',   at: [4, 150 * SCALE] },        // and out the other side of the junction
   { id: 'mill',   at: [4, 1500 * SCALE] },        // the huge jute mill, midway to Cantonment
-  { id: 'cantt',  at: [4, 2900 * SCALE] },        // greenery inside the cantonment, through its station
-  { id: 'village', at: [5, 500 * SCALE] },        // paddy, ponds and tin roofs beyond
+  { id: 'cantt',  at: [4, 2900 * SCALE], blend: 30 },   // greenery inside the cantonment, through its station: a hard border, the factory wall just ends
+  { id: 'village', at: [5, 500 * SCALE], blend: 40 },        // paddy, ponds and tin roofs beyond
+  { id: 'hathazari', at: [6, 200 * SCALE], blend: 200 },     // Choudhury Hat to Foteyabad: the deep, open countryside of Hathazari
+  { id: 'village2', at: [7, 300 * SCALE] },                  // and on towards the University
 ];
 // Steel truss railway bridge over the Meghna, just past Bhairab Bazar
 const BRIDGE = { at: [1, 600], spans: 0, span: 120 };   // no Meghna bridge on this line

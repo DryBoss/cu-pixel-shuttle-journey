@@ -81,7 +81,9 @@ function paintPerson(g, d, p, frame) {
   // arms and whatever they carry
   const hand = frame === 6 ? [4, 3] : frame === 5 ? [4, 5] : walk === 1 ? [4, 6] : walk === 3 ? [0, 6] : [3, 7];
   switch (d.carry) {
-    case 'rifle':    R(4, 2, 1, 9, 'ink'); P(4, 1, 'grayLight'); P(3, 6, s); break;               // rifle held upright
+    case 'rifle':                                                                     // rifle slung over the shoulder: barrel up behind the head, a strap across the chest
+      R(0, 0, 1, 8, 'grayDark'); P(0, -1, 'ink'); R(0, 8, 1, 2, 'ink');
+      P(1, 3, 'ink'); P(2, 4, 'ink'); P(3, 5, 'ink'); P(3, 7, s); break;
     case 'badam':    R(3, 6, 4, 3, 'tan'); R(3, 6, 4, 1, 'brown'); P(4, 5, s); P(5, 5, 'brownDark'); P(4, 6, 'paddy'); P(5, 7, 'paddy'); break;   // a small basket of peanuts
     case 'bag':      R(4, 7, 2, 2, d.bagColor); P(4, 6, s); break;
     case 'backpack': R(0, 3, 1, 4, d.bagColor); P(hand[0], hand[1], s); break;
@@ -92,6 +94,8 @@ function paintPerson(g, d, p, frame) {
       else if (d.load === 'chest') { R(-1, -3, 6, 3, 'tan'); R(-1, -3, 6, 1, 'cream'); R(-1, -2, 6, 1, 'grayLight'); P(1, -1, 'brownDark'); P(2, -1, 'brownDark'); }   // plywood tea chest with a metal band
       else { R(-1, -3, 6, 3, 'brown'); R(-1, -3, 6, 1, 'tan'); R(0, -2, 1, 2, 'brownDark'); R(2, -2, 1, 2, 'brownDark'); R(4, -2, 1, 2, 'brownDark'); }          // wooden crate
       P(4, 3, d.top); P(4, 2, s); P(4, 1, s); break;
+    case 'kettle':   R(3, 5, 3, 4, 'grayLight'); R(3, 5, 3, 1, 'grayDark'); P(6, 6, 'grayDark'); P(6, 7, 'grayDark'); P(3, 9, 'white'); P(4, 9, 'white'); P(3, 10, s); break;   // a tea seller's kettle and glasses
+    case 'papers':   R(3, 3, 4, 6, 'white'); R(3, 3, 4, 1, 'ink'); P(4, 5, 'red'); P(5, 6, 'ink'); P(4, 7, 'ink'); P(3, 9, s); break;                                                // a stack of newspapers
     case 'tray':     R(3, 5, 5, 1, 'tan'); P(4, 4, 'red'); P(5, 4, 'paddy'); P(6, 4, 'white'); P(3, 6, s); break;
     default:
       if (d.kind === 'elder') { R(5, 6, 1, 6, 'brown'); P(4, 6, s); }   // walking cane

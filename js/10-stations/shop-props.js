@@ -3,9 +3,10 @@
 // Defines: shopProp, fishBasket, paintStall
 
 // Small station shops along the front of the platform: striped awning, a counter
-// and goods that depend on the kind (0 tea, 1 fruit, 2 snacks, 3 books, 4 cold drinks)
+// and goods that depend on the kind (0 tea, 1 fruit, 2 snacks, 3 books, 4 cold drinks,
+// 5 a bookstall full of colourful magazines, 6 a blue-and-white cold drink stand)
 function shopProp(p, lit, kind) {
-  const awn = [['red', 'cream'], ['green', 'white'], ['blue', 'cream'], ['orange', 'white'], ['purple', 'cream']][kind];
+  const awn = [['red', 'cream'], ['green', 'white'], ['blue', 'cream'], ['orange', 'white'], ['purple', 'cream'], ['orange', 'white'], ['blue', 'white']][kind];
   return prop(24, 16, 12, 15, g => {
     rect(g, 2, 3, 20, 7, p.brownDark);
     for (let x = 0; x < 24; x++) rect(g, x, 0, 1, 3, (x >> 1) & 1 ? p[awn[1]] : p[awn[0]]);
@@ -16,7 +17,20 @@ function shopProp(p, lit, kind) {
     else if (kind === 1) { for (let x = 3; x < 21; x += 4) { rect(g, x, 6, 3, 3, p[['red', 'orange', 'grassLight', 'paddy'][(x >> 2) % 4]]); } }
     else if (kind === 2) { for (let x = 3; x < 21; x += 3) { rect(g, x, 4, 2, 4, p[['red', 'blue', 'glow', 'green'][(x / 3 | 0) % 4]]); } }
     else if (kind === 3) { for (let x = 3; x < 21; x += 2) rect(g, x, 5, 1, 5, p[['red', 'blue', 'green', 'paddy', 'purple'][(x >> 1) % 5]]); }
-    else { for (let x = 4; x < 21; x += 3) { rect(g, x, 5, 2, 5, p[['green', 'orange', 'red', 'skyMid'][(x / 3 | 0) % 4]]); px(g, x, 4, p.white); } }
+    else if (kind === 4) { for (let x = 4; x < 21; x += 3) { rect(g, x, 5, 2, 5, p[['green', 'orange', 'red', 'skyMid'][(x / 3 | 0) % 4]]); px(g, x, 4, p.white); } }
+    else if (kind === 5) {                                 // magazines in two rows: little blocks of colour, a white title strip on each
+      const cols = ['red', 'blue', 'glow', 'green', 'purple', 'orange', 'rose', 'skyMid'];
+      for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) {
+        const x = 3 + i * 3, y = 4 + r * 3, col = cols[(i * 3 + r * 5) % cols.length];
+        rect(g, x, y, 2, 3, p[col]); px(g, x, y, p.white); px(g, x + 1, y + 1, p[cols[(i + r + 3) % cols.length]]);
+      }
+      rect(g, 21, 4, 1, 6, p.cream); px(g, 21, 5, p.ink); px(g, 21, 7, p.ink);        // newspapers pegged on a string
+    } else {                                               // cold drinks: a blue-and-white fridge, bottles and a cooler box
+      rect(g, 3, 4, 7, 6, p.white); rect(g, 3, 4, 7, 1, p.blue); rect(g, 4, 5, 5, 4, p.skyLight);
+      for (let x = 4; x < 9; x++) { px(g, x, 6, p[['red', 'orange', 'green', 'glow', 'blue'][x % 5]]); px(g, x, 8, p[['green', 'red', 'orange', 'blue', 'glow'][x % 5]]); }
+      rect(g, 13, 7, 7, 3, p.blue); rect(g, 13, 7, 7, 1, p.white);
+      for (let x = 12; x < 20; x += 2) { rect(g, x, 5, 1, 2, p[['orange', 'red', 'green'][(x >> 1) % 3]]); px(g, x, 5, p.white); }
+    }
     rect(g, 2, 10, 20, 6, p.brown); rect(g, 2, 10, 20, 1, p.tan);
     rect(g, 2, 14, 20, 1, p.brownDark);
   });

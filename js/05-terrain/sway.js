@@ -70,6 +70,20 @@ const SWAY = {
       }
     },
   },
+  bananaBig: {                                        // a broad-leafed banana plant with arching fronds: a = height
+    size: h => [27, h + 10, 13, h + 9],
+    paint(g, p, lean, h, b, ax, ay) {
+      const top = ay - h;
+      rect(g, ax - 1, top, 3, h, p.paddy); rect(g, ax + 1, top, 1, h, p.green); rect(g, ax - 1, top + 3, 3, 1, p.tan); rect(g, ax - 1, top + 8, 3, 1, p.tan);
+      for (const [d, len, drop] of [[-1, 11, 0], [1, 11, 0], [-1, 8, 3], [1, 8, 3], [-1, 6, 6], [1, 6, 6]])
+        for (let k = 0; k < len; k++) {
+          const x = ax + d * (1 + k) + Math.round(lean * k / len * 1.5), y = top - 1 + Math.round(drop * 0.5) - Math.round(Math.sin(k / len * 2.2) * 4) + Math.round(k * k / (len * len) * 4);
+          if (k > 1 && k < len - 2) { px(g, x, y - 1, p.grassLight); px(g, x, y, p.grass); px(g, x, y + 1, p.green); px(g, x, y + 2, p.greenDark); }
+          else { px(g, x, y, p.grass); px(g, x, y + 1, p.green); }
+        }
+      rect(g, ax + (lean > 0 ? 1 : 0), top - 6, 1, 6, p.grassLight);
+    },
+  },
   fern: {
     size: () => [13, 7, 6, 6],
     paint(g, p, lean, a, b, ax, ay) {

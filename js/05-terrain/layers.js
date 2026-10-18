@@ -23,7 +23,8 @@ const CHUNK_W = 64;                                 // multiple of 4: dither lin
 
 const TLAYERS = [
   { key: 'far', f: PARALLAX.far, y: LAYER_Y.far, h: 60, seed: 21, hiRows: null },
-  { key: 'mid', f: PARALLAX.mid, y: LAYER_Y.mid, h: 80, seed: 42, hiRows: [16, 46] },
+  { key: 'tall', f: PARALLAX.mid, y: 0, h: 128, seed: 63, hiRows: null },    // shares the mid layer's columns, full screen height: chimneys, towers
+  { key: 'mid', f: PARALLAX.mid, y: LAYER_Y.mid, h: 80, seed: 42, hiRows: [16, 78] },
   { key: 'fg',  f: PARALLAX.fg,  y: LAYER_Y.fg,  h: 34, seed: 77, hiRows: [12, 34] },
 ];
 const TL = Object.fromEntries(TLAYERS.map(L => [L.key, L]));

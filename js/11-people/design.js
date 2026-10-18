@@ -20,7 +20,7 @@ function makeDesign(rng, kind) {
     case 'porter':   d.top = 'red'; d.cloth = 'grayLight'; d.cloth2 = 'white'; d.carry = 'case'; d.load = pick(rng, ['crate', 'chest', 'sack', 'chest']); break;
     case 'vendor':   d.top = 'white'; [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'tray'; break;
     case 'guard':    d.top = 'white'; d.bottom = 'navy'; break;
-    case 'soldier':  d.top = 'greenDark'; d.bottom = 'green'; d.carry = 'rifle'; break;
+    case 'soldier':  d.top = 'greenDark'; d.bottom = 'greenDark'; d.carry = 'rifle'; break;   // dark green uniform, black boots, rifle slung on the shoulder
     case 'peanut':   d.top = pick(rng, SHIRTS); [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'badam'; break;     // a lone peanut seller
     case 'hawker':   d.top = pick(rng, SHIRTS); [d.cloth, d.cloth2] = pick(rng, LUNGIS); d.carry = 'basket'; break;
   }

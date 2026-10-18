@@ -1,6 +1,6 @@
 'use strict';
 // js/10-stations/slabs.js
-// Defines: buildOldSlab, buildSlab, buildBleachedSlab, buildWeatheredSlab, dappleSlab
+// Defines: buildOldSlab, buildSlab, buildCleanSlab, buildBakedSlab, buildBleachedSlab, buildWeatheredSlab, dappleSlab, shadeSlab
 
 // Raised concrete platform seen from slightly above: coping, yellow safety
 // line along the track edge, paved surface, then the front face.
@@ -45,6 +45,37 @@ function buildSlab(p, w, seed) {
   for (let x = 5; x < w; x += 24) rect(g, x, 25, 1, 7, p.grayDark);
   rect(g, 0, 0, 1, 32, p.grayDark);
   rect(g, w - 1, 0, 1, 32, p.grayDark);
+  return c;
+}
+
+// The Cantonment's platform: swept every morning. Same concrete, but no scatter of stains or litter:
+// crisp joints, a bright safety line, a white kerb
+function buildCleanSlab(p, w, seed) {
+  const [c, g] = makeCanvas(w, 32);
+  rect(g, 0, 0, w, 1, p.white);
+  rect(g, 0, 1, w, 23, p.grayLight);
+  rect(g, 0, 2, w, 1, p.glow);
+  for (const y of [9, 16]) rect(g, 0, y, w, 1, p.cloudShade);
+  [[3, 6], [10, 6], [17, 7]].forEach(([y, h], r) => { for (let x = (r * 7) % 16; x < w; x += 16) rect(g, x, y, 1, h, p.cloudShade); });
+  rect(g, 0, 24, w, 1, p.white);
+  rect(g, 0, 25, w, 7, p.cloudShade);
+  rect(g, 0, 29, w, 3, p.gray);
+  for (let x = 5; x < w; x += 24) rect(g, x, 25, 1, 7, p.gray);
+  rect(g, 0, 0, 1, 32, p.gray); rect(g, w - 1, 0, 1, 32, p.gray);
+  return c;
+}
+
+// Foteyabad's platform: open to the sky, so sun-baked and a little bleached, with a faded safety line and a few
+// hairline cracks, but kept tidy: no litter, no mould
+function buildBakedSlab(p, w, seed) {
+  const c = buildCleanSlab(p, w, seed), g = c.getContext('2d'), rng = mulberry32(4100 + seed);
+  for (let y = 3; y < 24; y++) for (let x = 1; x < w - 1; x++)
+    if (y !== 2 && hash2(x >> 2, y >> 1) < 0.3 - y * 0.006 && bayer(x, y) < 9) px(g, x, y, (x + y) % 5 ? p.cloudShade : p.white);   // bleached by the sun
+  for (let x = 1; x < w - 1; x++) px(g, x, 2, bayer(x, 2) < 10 && hash2(x >> 1, 7) < 0.8 ? p.paddy : p.cloudShade);    // faded safety line
+  for (let i = 0; i < w / 40; i++) {                                                                                   // hairline cracks
+    let x = randInt(rng, 6, w - 7), y = randInt(rng, 4, 14);
+    for (let n = randInt(rng, 5, 11); n > 0 && y < 23; n--) { px(g, x, y, p.gray); y += rng() < 0.7 ? 1 : 0; x += rng() < 0.5 ? 1 : -1; }
+  }
   return c;
 }
 
@@ -119,4 +150,14 @@ function buildWeatheredSlab(p, w, seed) {
     if (hash2(x >> 3, 93) < 0.3) { const l = randInt(rng, 4, 10); for (let j = 0; j < l; j++) if (bayer(x, 25 + j) < 12 - j) px(g, x, 25 + j, p.grayDark); }   // mould drips down the face
   }
   return c;
+}
+
+// Shade under a long roof: darker toward the back wall, dithered so the concrete still shows
+function shadeSlab(c, p, L, span) {
+  const g = c.getContext('2d');
+  for (let y = 3; y < 24; y++)
+    for (let x = Math.max(1, span[0] - L); x < Math.min(c.width - 1, span[1] - L); x++) {
+      const lv = y < 9 ? 9 : y < 16 ? 6 : 3;
+      if (bayer(x, y) < lv) px(g, x, y, y < 9 ? p.grayDark : p.gray);
+    }
 }

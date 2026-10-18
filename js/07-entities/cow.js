@@ -14,7 +14,8 @@ function cowEnt(lx, y, rng) {
     mp(-2, -5, c1); mp(-1, -5, c1); mp(1, -6, c1);                            // patches
     mp(2, -7, c0); mp(3, -7, c0);                                            // hump
     for (let i = 0; i < 4; i++) mpRect(COW_LEGS[i], -2, 1, 2, c1);           // legs
-    if (Math.sin(t * 0.35 + ph) > 0.6) {                                     // looking up
+    const passing = sim.speed > 6 && Math.abs(lx + ox - 160) < 110;          // the train is going by: heads come up
+    if (passing || Math.sin(t * 0.35 + ph) > 0.6) {                          // looking up
       mpRect(4, -7, 2, 2, c0); mp(6, -6, c0); mp(4, -8, c1); mp(5, -8, 'cream');
     } else {                                                                 // grazing, chewing
       const chew = Math.floor(t * 2 + ph) & 1;

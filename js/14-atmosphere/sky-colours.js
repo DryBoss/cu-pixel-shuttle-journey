@@ -1,6 +1,6 @@
 'use strict';
 // js/14-atmosphere/sky-colours.js
-// Defines: hexRgbF, keyedColours, skyKey, SKY_KEYS, SKY_DEEP, SKY_MIST, SKY_RAIN_DAY, SKY_RAIN_NIGHT
+// Defines: hexRgbF, keyedColours, skyKey, SKY_KEYS, SKY_DEEP, SKY_MIST, SKY_SMOG, SKY_RAIN_DAY, SKY_RAIN_NIGHT
 
 // Interpolate a table of [hour, ...hex colours] rows into out (RGB floats)
 function hexRgbF(hex) { const [r, g, b] = hexToRgb(hex); return [r, g, b]; }
@@ -24,5 +24,6 @@ const SKY_KEYS = [
 // section moods (daylight only) and rain, as targets the sky leans towards
 const SKY_DEEP = [...hexRgbF('#2a60b2'), ...hexRgbF('#4a92d8'), ...hexRgbF('#9ccff0')];
 const SKY_MIST = [...hexRgbF('#8fb3cf'), ...hexRgbF('#b8c8d6'), ...hexRgbF('#d0d8e0')];
+const SKY_SMOG = [...hexRgbF('#8e8f8c'), ...hexRgbF('#a7a498'), ...hexRgbF('#bbb09a')];     // the dull, dusty grey over the mill
 const SKY_RAIN_DAY = [...hexRgbF('#5d6577'), ...hexRgbF('#7d8596'), ...hexRgbF('#9aa1ad')];
 const SKY_RAIN_NIGHT = [...hexRgbF('#14161e'), ...hexRgbF('#1c1f2a'), ...hexRgbF('#262a36')];

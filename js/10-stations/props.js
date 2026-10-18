@@ -26,6 +26,21 @@ function buildProps(p, lit) {
       rect(g, 3, 1, 1, 5, p.navy);
       px(g, 1, 2, p.white);
     }),
+    hedge: prop(30, 6, 0, 5, g => hedgeRow(g, p, 0, 30, 5, 4)),                       // a clipped hedge section
+    // cast-iron bin: a heavy drum with a rim, band and a rust-streaked flank
+    ironbin: prop(6, 9, 3, 8, g => {
+      rect(g, 0, 0, 6, 1, p.gray); rect(g, 1, 1, 4, 1, p.ink);
+      rect(g, 0, 2, 6, 6, p.grayDark); rect(g, 0, 2, 1, 6, p.gray); rect(g, 5, 2, 1, 6, p.ink);
+      rect(g, 0, 4, 6, 1, p.gray); px(g, 3, 6, p.rust); px(g, 2, 7, p.rust);
+      rect(g, 0, 8, 6, 1, p.ink);
+    }),
+    // a very old, weathered wooden bench: grey-brown planks, one split, moss at the feet
+    rusticbench: prop(14, 7, 0, 6, g => {
+      rect(g, 1, 0, 12, 1, p.brownDark); rect(g, 1, 1, 12, 1, p.brown); px(g, 6, 1, p.ink);
+      rect(g, 1, 3, 12, 1, p.brown); rect(g, 1, 4, 12, 1, p.brownDark); px(g, 8, 3, p.tan); px(g, 3, 4, p.ink);
+      rect(g, 1, 5, 1, 2, p.brownDark); rect(g, 12, 5, 1, 2, p.brownDark); rect(g, 1, 2, 1, 1, p.brownDark); rect(g, 12, 2, 1, 1, p.brownDark);
+      px(g, 1, 6, p.greenDark); px(g, 2, 6, p.green); px(g, 12, 6, p.greenDark); px(g, 4, 5, p.grass);
+    }),
     // water tap: standpipe, spout, basin and a drip
     tap: prop(7, 9, 3, 8, g => {
       rect(g, 3, 1, 1, 6, p.grayDark);
@@ -77,7 +92,7 @@ function buildProps(p, lit) {
       for (const [x, y, w] of [[0, 4, 3], [4, 4, 3], [8, 4, 3], [2, 2, 3], [6, 2, 3], [4, 0, 3]]) { rect(g, x, y, w, 2, (x + y) % 3 ? p.rust : p.red); px(g, x, y, p.brown); }
       rect(g, 0, 6, 11, 1, p.brownDark);
     }),
-    shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4),
+    shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4), shop5: shopProp(p, lit, 5), shop6: shopProp(p, lit, 6),
     // plywood tea chests, banded and stencilled, waiting for the goods train
     chests: prop(11, 10, 5, 9, g => {
       for (const [x, y, w] of [[0, 5, 11], [2, 0, 7]]) {

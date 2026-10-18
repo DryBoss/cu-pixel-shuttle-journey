@@ -23,7 +23,7 @@ function buildVariant(name) {
   return {
     name, lit: def.lit, p, rgba, puffs: [], people: new Map(),
     sprites: new Map(),                                   // terrain sprites, painted on first use
-    chunks: { far: new Map(), mid: new Map(), fg: new Map() },
+    chunks: { far: new Map(), tall: new Map(), mid: new Map(), fg: new Map() },
     clouds: buildClouds(p),
     cumulus: buildCumulus(p),
     poles: buildPoles(p),

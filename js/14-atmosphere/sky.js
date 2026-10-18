@@ -7,8 +7,9 @@
 const sky = { strip: null, sg: null, img: null, pattern: null, key: -1, cols: new Float32Array(9), tmp: new Float32Array(9) };
 function updateSky(g) {
   const d = sim.dist, day = 1 - sim.night, deep = sectionWeight('kash', d) * day, mist = sectionWeight('hills', d) * day;
+  const smog = Math.min(1, sectionWeight('mill', d) + 0.4 * sectionWeight('nasirabad', d)) * day;   // grey, dusty skies over industry
   const rain = weather.level;
-  const key = ((Math.round(sim.hour * 60) * 21 + Math.round(deep * 20)) * 21 + Math.round(mist * 20)) * 21 + Math.round(rain * 20);
+  const key = (((Math.round(sim.hour * 60) * 21 + Math.round(deep * 20)) * 21 + Math.round(mist * 20)) * 21 + Math.round(smog * 20)) * 21 + Math.round(rain * 20);
   if (key === sky.key) return;
   sky.key = key;
   if (!sky.strip) { [sky.strip, sky.sg] = makeCanvas(4, H); sky.img = sky.sg.createImageData(4, H); }
@@ -17,6 +18,7 @@ function updateSky(g) {
     let v = c[i];
     v += (SKY_DEEP[i] - v) * deep;
     v += (SKY_MIST[i] - v) * mist * 0.7;
+    v += (SKY_SMOG[i] - v) * smog * 0.75;
     t[i] = SKY_RAIN_NIGHT[i] + (SKY_RAIN_DAY[i] - SKY_RAIN_NIGHT[i]) * day;
     c[i] = v + (t[i] - v) * rain * 0.65;
   }

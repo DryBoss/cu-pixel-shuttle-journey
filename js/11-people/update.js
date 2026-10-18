@@ -28,6 +28,10 @@ function updatePerson(q, dt) {
     if (q.delay <= 0) q.hidden = false;
     return;
   }
+  if (q.edge && q.mode === 'wait' && (sim.state === 'ARRIVING' || sim.state === 'DRIVING') &&
+      STATIONS[q.st].dist === sim.nextStop && sim.nextStop - sim.dist < 330) {       // the train is coming in: step back from the edge
+    q.edge = false; q.path = [{ x: q.x, y: 159 + Math.random() * 5, speed: 14 }];
+  }
   if (q.path.length) { moveAlong(q, dt); return; }
   switch (q.mode) {
     case 'idle': case 'wait': case 'porterWait':

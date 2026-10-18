@@ -9,14 +9,21 @@
 // wind crest. Ground rows: far 52, mid 34, fg 12 (all screen y 112 / 118 / 158).
 const SECTIONS = {
   village: {
-    name: 'VILLAGE', sky: 'normal', birds: ['egret', 0.06],
-    far: { spawn: ctx => { treeLine(ctx); }, ground: (c, y) => y >= 52 ? 'haze' : null },
-    mid: { spawn: villageMid, column: paddyColumn, ground: paddyGround },
+    name: 'VILLAGE', sky: 'normal', birds: ['egret', 0.16],             // egrets over the fields, more of them than the kites of the city
+    far: { spawn: villageFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: villageMid, column: paddyColumn, ground: paddyGround, hl: paddyHl },
     fg:  { spawn: villageFg, column: villageFgColumn, ground: villageFgGround, hl: villageFgHl },
+  },
+  hathazari: {
+    name: 'HATHAZARI', sky: 'normal', birds: ['egret', 0.2],
+    far: { spawn: hathazariFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: hathazariMid, column: paddyColumn, ground: paddyGround, hl: paddyHl },
+    fg:  { spawn: hathazariFg, column: hathazariFgColumn, ground: hathazariFgGround, hl: hathazariFgHl },
   },
   mill: {
     name: 'JUTE MILL', sky: 'normal', birds: ['hawk', 0.05],
     far: { spawn: millFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    tall: { spawn: millTall },
     mid: { spawn: millMid, ground: millMidGround },
     fg:  { spawn: slumFg, ground: slumFgGround },
   },
@@ -49,6 +56,12 @@ const SECTIONS = {
     far: { spawn: khulshiFar, ground: (c, y) => y >= 52 ? 'haze' : null },
     mid: { spawn: khulshiMid, ground: khulshiMidGround },
     fg:  { spawn: khulshiFg, ground: khulshiFgGround },
+  },
+  nasirabad: {
+    name: 'NASIRABAD', sky: 'normal', birds: ['crow', 0.06],
+    far: { spawn: nasirabadFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    mid: { spawn: nasirabadMid, column: nasirabadCol, ground: nasirabadMidGround },
+    fg:  { spawn: nasirabadFg, column: nasirabadCol, ground: nasirabadFgGround },
   },
   river: {
     name: 'MEGHNA', sky: 'normal', birds: ['gull', 0.4],
@@ -88,3 +101,4 @@ const SECTIONS = {
     fg:  { spawn: hillsFg, column: (lx, D) => D.streams.find(s => Math.abs(lx - s.cx) < s.w + 24) || null, ground: hillsFgGround },
   },
 };
+SECTIONS.village2 = SECTIONS.village;                    // the same countryside again after Foteyabad, with its own field data
