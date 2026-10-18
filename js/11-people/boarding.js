@@ -11,10 +11,10 @@ function startBoarding(st) {
   const alight = terminus ? Math.max(st.alight, Math.min(40, drive.pax)) : drive.on ? Math.min(st.alight, drive.pax) : st.alight;
   for (let i = 0; i < alight; i++) {
     const door = DOORS[Math.floor(Math.random() * DOORS.length)] + o, x = door + 2;
-    const q = spawnPerson(st, makeDesign(Math.random), x, PLAT.DOOR_FLOOR, x - o < 150 ? -1 : 1, 'alight');
+    const q = spawnPerson(st, st.students ? makeStudentDesign(Math.random) : makeDesign(Math.random), x, PLAT.DOOR_FLOOR, x - o < 150 ? -1 : 1, 'alight');
     const y = randWalkY(Math.random, st.tight), exit = (x - o < 150 ? -24 : W + 24) + o;   // just off screen
     q.hidden = true;
-    q.delay = i * (terminus ? 0.28 : 0.4) + Math.random() * 0.6;
+    q.delay = i * (terminus ? (st.students ? 0.14 : 0.28) : 0.4) + Math.random() * 0.6;   // at a student terminus the wave is nearly unbroken
     q.path = [{ x, y: PLAT.EDGE_Y, clip: door, speed: 18, then: passengerOut },
               { x: x + Math.sign(exit - x) * 4, y },
               { x: exit, y, then: gone }];

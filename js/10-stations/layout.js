@@ -40,6 +40,7 @@ function layoutStation(st) {
     every(76, 164, x => clear(x) && items.push({ type: 'bin', x, y: 164 }));
     items.push({ type: 'tap', x: 256, y: 165 });
   }
+  if (st.manyTaps) every(40, 96, x => clear(x) && items.push({ type: 'tap', x, y: 165 }));    // water taps scattered all along
   items.push({ type: 'stall', key: st.oldSlab ? 'stallCart' : st.liveStall ? 'stallTea' : 'stall', x: PLAT.STALL_X, y: PLAT.STALL_Y });
   if (st.jhau) st.jhau.forEach((x, i) => items.push({ type: 'jhau', key: 'jhau' + (i % 3), x, y: 156 }));   // tall Jhau trees at the platform ends
   items.push({ type: 'board', x: PLAT.BOARD_X, y: 159 });

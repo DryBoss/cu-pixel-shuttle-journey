@@ -24,7 +24,7 @@ const lateMinutes = (t, due) => (t - due) * HOURS_PER_S * 60;
 
 // Where the train may stand at a station and still have every door on the
 // platform: [lo, hi] px around the stop mark. The terminus ends in a buffer stop.
-const DOORS_LO = Math.min(...DOORS), DOORS_HI = Math.max(...DOORS) + 4, BUFFER_O = 72;
+const DOORS_LO = Math.min(...DOORS), DOORS_HI = Math.max(...DOORS) + 4, BUFFER_O = 34;
 const STOP_WIN = [0, 0];
 function stopWindow(st) {
   const [L, R] = st.platform;
@@ -37,7 +37,8 @@ function stopWindow(st) {
 // bridge and through stations
 function speedLimitAt(d) {
   const D = CONFIG.DRIVE;
-  let lim = sectionWeight('tea', d) + sectionWeight('hills', d) > 0.5 ? D.LIMIT_HILLS : D.LIMIT;
+  let lim = sectionWeight('tea', d) > 0.5 ? D.LIMIT_HILLS : D.LIMIT;
+  if (sectionWeight('hills', d) > 0.5) lim = D.LIMIT_CU_HILLS;                       // the winding hill track into the University: brake hard, well before the terminus
   if (BRIDGE.spans && d > BRIDGE.u0 - 460 && d < BRIDGE.u1 + 140) lim = Math.min(lim, D.LIMIT_BRIDGE);   // from Bhairab over the Meghna
   for (let i = 0; i < STATIONS.length; i++)
     if (d > STATIONS[i].dist - 280 && d < STATIONS[i].dist + 160) return Math.min(lim, D.LIMIT_STATION);

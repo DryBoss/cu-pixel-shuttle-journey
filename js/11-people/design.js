@@ -1,11 +1,18 @@
 'use strict';
 // js/11-people/design.js
-// Defines: PERSON_W, pick, designId, makeDesign
+// Defines: makeStudentDesign, PERSON_W, pick, designId, makeDesign
 
 const PERSON_W = 13, PERSON_H = 20, PERSON_CX = 6, PERSON_FY = 19;   // sprite box, centre column, feet row
 const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 
 let designId = 0;
+// A university student: trousers or kameez, nearly always with a backpack or bag
+function makeStudentDesign(r) {
+  const d = makeDesign(r, r() < 0.55 ? 'trousers' : 'kameez');
+  d.carry = d.kind === 'trousers' ? (r() < 0.82 ? 'backpack' : 'bag') : (r() < 0.55 ? 'bag' : 'backpack');
+  return d;
+}
+
 function makeDesign(rng, kind) {
   kind = kind || pick(rng, PASSENGER_KINDS);
   const d = { id: ++designId, kind, skin: pick(rng, SKINS), hair: rng() < 0.85 ? 'ink' : 'brownDark', h: 12, carry: null };

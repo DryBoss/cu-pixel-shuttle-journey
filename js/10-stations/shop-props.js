@@ -6,7 +6,7 @@
 // and goods that depend on the kind (0 tea, 1 fruit, 2 snacks, 3 books, 4 cold drinks,
 // 5 a bookstall full of colourful magazines, 6 a blue-and-white cold drink stand)
 function shopProp(p, lit, kind) {
-  const awn = [['red', 'cream'], ['green', 'white'], ['blue', 'cream'], ['orange', 'white'], ['purple', 'cream'], ['orange', 'white'], ['blue', 'white']][kind];
+  const awn = [['red', 'cream'], ['green', 'white'], ['blue', 'cream'], ['orange', 'white'], ['purple', 'cream'], ['orange', 'white'], ['blue', 'white'], ['green', 'orange']][kind];
   return prop(24, 16, 12, 15, g => {
     rect(g, 2, 3, 20, 7, p.brownDark);
     for (let x = 0; x < 24; x++) rect(g, x, 0, 1, 3, (x >> 1) & 1 ? p[awn[1]] : p[awn[0]]);
@@ -25,6 +25,12 @@ function shopProp(p, lit, kind) {
         rect(g, x, y, 2, 3, p[col]); px(g, x, y, p.white); px(g, x + 1, y + 1, p[cols[(i + r + 3) % cols.length]]);
       }
       rect(g, 21, 4, 1, 6, p.cream); px(g, 21, 5, p.ink); px(g, 21, 7, p.ink);        // newspapers pegged on a string
+    } else if (kind === 7) {                               // a CU 'tong': glowing clay stove, kettle, hanging bananas, jars, colourful awning
+      rect(g, 3, 8, 6, 2, p.rust); px(g, 5, 9, PALETTE.amber); px(g, 6, 9, PALETTE.glow); px(g, 4, 9, PALETTE.red);
+      rect(g, 4, 5, 4, 3, p.grayLight); rect(g, 5, 4, 2, 1, p.gray); px(g, 8, 6, p.grayLight);
+      if (lit) glowHalo(g, 5, 9, 2, 6, 5);
+      for (const bx of [11, 15, 19]) { rect(g, bx, 3, 1, 1, p.brown); rect(g, bx - 1, 4, 3, 3, p.paddy); px(g, bx - 1, 4, p.glow); px(g, bx, 7, p.paddy); px(g, bx + 1, 6, p.brown); }   // hanging bananas
+      for (const jx of [10, 14, 18]) { rect(g, jx, 8, 3, 1, p.red); rect(g, jx, 9, 3, 2, p.skyLight); px(g, jx + 1, 10, p.tan); }
     } else {                                               // cold drinks: a blue-and-white fridge, bottles and a cooler box
       rect(g, 3, 4, 7, 6, p.white); rect(g, 3, 4, 7, 1, p.blue); rect(g, 4, 5, 5, 4, p.skyLight);
       for (let x = 4; x < 9; x++) { px(g, x, 6, p[['red', 'orange', 'green', 'glow', 'blue'][x % 5]]); px(g, x, 8, p[['green', 'red', 'orange', 'blue', 'glow'][x % 5]]); }

@@ -95,8 +95,9 @@ const SECTIONS = {
            hl: (c, y, lx) => { if (y < 15) return null; const [rel, bump] = teaFgRow(lx, y); return rel === 2 - bump && bayer(lx, y) < 9 ? 'grassLight' : null; } },
   },
   hills: {
-    name: 'SYLHET HILLS', sky: 'mist', birds: ['hawk', 0.05],
+    name: 'CU HILLS', sky: 'mist', birds: ['hawk', 0.07],
     far: { spawn: hillsFar, ground: (c, y) => y >= 52 ? 'haze' : null },
+    tall: { spawn: hillsTall },
     mid: { spawn: hillsMid, ground: (c, y, lx) => y < 34 ? null : hash2(lx >> 1, y >> 1) < 0.3 ? 'greenDark' : bayer(lx, y) < 3 ? 'grass' : 'green' },
     fg:  { spawn: hillsFg, column: (lx, D) => D.streams.find(s => Math.abs(lx - s.cx) < s.w + 24) || null, ground: hillsFgGround },
   },

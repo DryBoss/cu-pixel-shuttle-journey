@@ -92,7 +92,7 @@ function buildProps(p, lit) {
       for (const [x, y, w] of [[0, 4, 3], [4, 4, 3], [8, 4, 3], [2, 2, 3], [6, 2, 3], [4, 0, 3]]) { rect(g, x, y, w, 2, (x + y) % 3 ? p.rust : p.red); px(g, x, y, p.brown); }
       rect(g, 0, 6, 11, 1, p.brownDark);
     }),
-    shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4), shop5: shopProp(p, lit, 5), shop6: shopProp(p, lit, 6),
+    shop0: shopProp(p, lit, 0), shop1: shopProp(p, lit, 1), shop2: shopProp(p, lit, 2), shop3: shopProp(p, lit, 3), shop4: shopProp(p, lit, 4), shop5: shopProp(p, lit, 5), shop6: shopProp(p, lit, 6), shop7: shopProp(p, lit, 7),
     // plywood tea chests, banded and stencilled, waiting for the goods train
     chests: prop(11, 10, 5, 9, g => {
       for (const [x, y, w] of [[0, 5, 11], [2, 0, 7]]) {

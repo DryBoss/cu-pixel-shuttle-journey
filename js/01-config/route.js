@@ -64,7 +64,13 @@ const ROUTE = [
     villagers: true },             // villagers in lungis and elders, mixed with students in kameez and trousers
   { en: 'CHITTAGONG UNIV.', bn: 'চট্টগ্রাম বিশ্ববিদ্যালয়', code: 'CU', km: 22,
     platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 0, alight: 40, idle: 2,
-    backdrop: ['cu'], extras: ['shops', 'vendors'] },
+    backdrop: ['cu'], extras: ['shops', 'vendors', 'swarm'],   // no building at all: hills, jungle, a row of tong stalls and the swarm of sellers
+    ironLamps: true, manyTaps: true,   // free-standing old iron lamp posts, benches, and water taps scattered along the open slab
+    shopKinds: [7, 0, 7, 2, 1, 7, 0, 2, 7, 1],   // 'tong' shops: tea stalls with glowing clay stoves and hanging bananas, snacks, fruit
+    swarmCount: 10,                // hawkers and vendors pacing among the stalls
+    canopy: true,                  // old trees meeting overhead: leafy shade everywhere
+    shade: [20, 70, 120, 170, 220, 270, 320],
+    students: true },              // the alighting flood is all students in kameez and trousers with bags and backpacks
 ];
 const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'green',
                            crowd: 4, alight: 3, idle: 3, backdrop: [], extras: [] };

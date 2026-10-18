@@ -19,6 +19,7 @@ const TERRAIN = [
   { id: 'village', at: [5, 500 * SCALE], blend: 40 },        // paddy, ponds and tin roofs beyond
   { id: 'hathazari', at: [6, 200 * SCALE], blend: 200 },     // Choudhury Hat to Foteyabad: the deep, open countryside of Hathazari
   { id: 'village2', at: [7, 300 * SCALE] },                  // and on towards the University
+  { id: 'hills', at: [8, -1500 * SCALE] },                  // the plains end: into the Chittagong University hills, steep and forested
 ];
 // Steel truss railway bridge over the Meghna, just past Bhairab Bazar
 const BRIDGE = { at: [1, 600], spans: 0, span: 120 };   // no Meghna bridge on this line

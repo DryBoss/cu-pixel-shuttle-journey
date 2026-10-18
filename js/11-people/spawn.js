@@ -55,7 +55,7 @@ function populateStation(st) {
       spawnPerson(st, d, PLAT.STALL_X + dx, PLAT.STALL_Y + dy, dir, 'sip');
     }
   if (st.extras.includes('swarm'))                         // a swarm of hawkers and vendors working the crowd: jhalmuri, tea, newspapers, snacks
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < (st.swarmCount || 22); i++) {
       const d = makeDesign(rng, i % 3 === 0 ? 'hawker' : 'vendor');
       if (d.kind === 'vendor') d.carry = pick(rng, ['kettle', 'papers', 'tray', 'kettle', 'papers']);
       const q = spawnPerson(st, d, 10 + rng() * 300, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, i % 5 === 0 ? 'idle' : 'patrol');

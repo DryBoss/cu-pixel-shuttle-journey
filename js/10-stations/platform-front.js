@@ -20,6 +20,7 @@ function drawStationFront(g, v) {
     frontItems.sort(byY);
     for (let k = 0; k < frontItems.length; k++) { const it = frontItems[k]; it.d ? drawPersonAt(g, v, it, off) : drawProp(g, v, st, it, off); }
     if (s.roof) g.drawImage(s.roof, s.roofX + off, s.roofY);
+    if (s.canopy) g.drawImage(s.canopy, st.platform[0] + off, 0);
   }
 }
 
@@ -37,13 +38,19 @@ function drawStopMark(g, v, off) {
 // The end of the line at Sylhet: a striped buffer beam on a braced frame
 function drawBuffer(g, v, off) {
   const p = v.p, x = CONFIG.TRAIN_FRONT_X + BUFFER_O + 2 + off;
-  if (x < -16 || x > W + 4) return;
-  rect(g, x + 3, 131, 2, 15, p.grayDark);              // post with a lamp on top
-  px(g, x + 3, 131, PALETTE.red);
-  rect(g, x, 135, 3, 6, p.red);                        // buffer beam at the height of the loco's
-  for (let y = 136; y < 141; y += 2) rect(g, x, y, 3, 1, p.white);
-  for (let k = 0; k < 8; k++) px(g, x + 5 + k, 138 + k, p.gray);   // brace
-  rect(g, x - 1, 146, 16, 1, p.grayDark);
+  if (x < -24 || x > W + 4) return;
+  rect(g, x - 3, 146, 22, 3, p.cloudShade); rect(g, x - 3, 146, 22, 1, p.white); rect(g, x - 3, 148, 22, 1, p.gray);   // concrete plinth
+  for (const px0 of [x + 2, x + 9]) {                                             // twin rusted steel posts
+    rect(g, px0, 129, 3, 17, p.rust); rect(g, px0, 129, 1, 17, p.orange); rect(g, px0 + 2, 129, 1, 17, p.brownDark);
+    for (let y = 133; y < 145; y += 4) px(g, px0 + 1, y, p.brown);
+  }
+  rect(g, x - 1, 133, 14, 8, p.red);                                             // the red buffer beam at the height of the loco's
+  for (let xx = x; xx < x + 12; xx += 4) rect(g, xx, 134, 2, 6, p.white);
+  for (let i = 0; i < 9; i++) px(g, x - 1 + ((i * 5) % 14), 133 + ((i * 3) % 8), p.rust);   // rust bleeding through
+  for (const by of [134, 138]) { disc(g, x - 3, by + 1, 2, p.gray); px(g, x - 4, by, p.grayLight); px(g, x - 3, by + 1, p.grayDark); }   // the round buffers
+  for (let k = 0; k < 7; k++) { px(g, x + 12 + k, 140 + k, p.rust); px(g, x + 13 + k, 140 + k, p.brown); }   // heavy diagonal brace
+  rect(g, x + 6, 124, 2, 6, p.grayDark); rect(g, x + 5, 121, 4, 3, p.red);                                   // lamp on a post
+  px(g, x + 6, 122, PALETTE.red); if (v.night > 0.3) glowHalo(g, x + 6.5, 122.5, 1.5, 6, 5);
 }
 
 function drawProp(g, v, st, it, off) {

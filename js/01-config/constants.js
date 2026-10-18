@@ -33,7 +33,7 @@ const CONFIG = {
     DRAG: [0.5, 0.00035],               // rolling + air resistance: c0 + c1 * v²
     BRAKE: 4.5, EMERGENCY: 28,          // px/s² per brake step, emergency brake
     CRANK_TIME: 2.2, SHUTDOWN_TIME: 2.5,
-    LIMIT: 100, LIMIT_HILLS: 80, LIMIT_BRIDGE: 60, LIMIT_STATION: 60,   // km/h (= px/s)
+    LIMIT: 100, LIMIT_HILLS: 80, LIMIT_CU_HILLS: 50, LIMIT_BRIDGE: 60, LIMIT_STATION: 60,   // km/h (= px/s)
     COMFORT_ACCEL: 16,                  // px/s² passengers put up with
     FIRST_DEP: 32, DWELL: 16, SLACK: 6, // timetable: s to first departure, per stop, per leg
     SCHED_SPEED: 84,                    // px/s the timetable assumes on open line
