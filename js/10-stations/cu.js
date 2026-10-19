@@ -2,54 +2,36 @@
 // js/10-stations/cu.js
 // Defines: buildCU, buildCanopyOverhang
 
-// Chittagong University: no station building at all. The terminus is open-air, set straight into the
-// campus: towering dark-green hills rise almost at once behind the tracks, and old-growth jungle trees
-// spill down their slopes and over the line. (Screen x -100 is the sprite's left edge at the stop; the
-// ground is row 98 = screen y 128.) The yard, buffer stop, stalls and people are drawn in front.
+// Chittagong University: no station building at all. The open-air terminus is set in the packed university town:
+// behind the tracks, rows of concrete blocks and tin-roofed shops stand shoulder to shoulder around the campus
+// gate (a pair of brick pillars and an arch sign). There are no hills nearby, only a few shade trees and, far off,
+// the hazy hills of the far layer. (Screen x -100 is the sprite's left edge at the stop; the ground is row 98 =
+// screen y 128.) The yard, buffer stop, stalls and people are drawn in front.
 function buildCU(p, lit) {
-  const W = 520, H = 112, [c, g] = makeCanvas(W, H), rng = mulberry32(73), base = 98;
-  const taper = x => Math.min(1, x / 110, (W - 1 - x) / 110);                      // the hills die away gently at both ends
-  const top = (x, o) => Math.round(o.base - taper(x) * (o.A + o.a1 * Math.sin(x * o.f1 + o.s1) + o.a2 * Math.sin(x * o.f2 + o.s2) + o.a3 * Math.sin(x * o.f3 + o.s3)));
-  const RANKS = [
-    { base: 88, A: 48, a1: 16, f1: 0.021, s1: 0.6, a2: 8, f2: 0.053, s2: 1.9, a3: 3, f3: 0.11, s3: 0.3, kind: 'haze' },     // far, pale in the haze
-    { base: 94, A: 40, a1: 15, f1: 0.027, s1: 2.1, a2: 7, f2: 0.061, s2: 0.4, a3: 3, f3: 0.13, s3: 1.1, kind: 'mid' },      // the main ridge
-    { base: 98, A: 22, a1: 11, f1: 0.037, s1: 4.0, a2: 5, f2: 0.083, s2: 2.2, a3: 2, f3: 0.17, s3: 0.7, kind: 'front' },    // the foothills nearest the line
-  ];
-  RANKS.forEach((o, ri) => {
-    for (let x = 0; x < W; x++) {
-      const t0 = top(x, o), slope = top(x - 2, o) - top(x + 2, o);
-      for (let y = t0; y < o.base; y++) {
-        const n = hash2(x >> 1, (y >> 1) + ri * 31), depth = y - t0;
-        if (o.kind === 'haze') px(g, x, y, depth < 8 && bayer(x, y) < (8 - depth) * 2 ? p.skyMid : (n < 0.3 ? p.haze : p.haze));
-        else px(g, x, y, depth < 2 ? (n < 0.55 ? p.green : p.greenDark)                    // sunlit crowns along the ridge
-                         : y > o.base - 8 ? (n < 0.25 ? p.greenDark : p.greenDeep)           // deep shade at the foot
-                         : n < 0.3 + (slope > 0 ? 0.22 : -0.08) ? p.green : n > 0.88 ? p.greenDeep : p.greenDark);
-      }
-    }
-    if (o.kind !== 'haze')
-      for (let i = 0; i < 40 + ri * 20; i++) {                                              // jungle trees dotting the slopes
-        const x = randInt(rng, 6, W - 7), y = top(x, o) + randInt(rng, 3, 26), r = randInt(rng, 3, 6 + ri);
-        disc(g, x, y, r, p.greenDeep); disc(g, x - 1, y - 1, r - 1, p.greenDark); disc(g, x - 1, y - 2, Math.max(1, r - 3), i & 1 ? p.green : p.grass);
-      }
-  });
-  rect(g, 0, base, W, H - base, p.brownDark);                                               // leaf-litter ground
-  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, base, H - 1), rng() < 0.4 ? p.greenDark : rng() < 0.5 ? p.brown : p.tan);
-
-  for (let x = 14, i = 0; x < W; x += randInt(rng, 46, 70), i++) {                            // old-growth shade trees: huge crowns spilling down and out over the line
-    const rw = randInt(rng, 26, 38), rh = randInt(rng, 20, 26), cy = randInt(rng, 70, 80), seed = 800 + i * 13;
-    rect(g, x - 3, cy + 8, 7, base - cy - 6, p.brownDark); rect(g, x - 3, cy + 8, 2, base - cy - 6, p.brown); rect(g, x - 5, base - 4, 11, 4, p.brownDark);   // buttressed trunk
-    leafyCrown(g, p, x, cy, rw, rh, seed, i & 1);
-    const fr = mulberry32(seed + 5);
-    for (let dx = -rw + 3; dx <= rw - 3; dx++) {                                             // lianas and leaf fringes hanging below the canopy
-      if (fr() < 0.55) continue;
-      const len = 2 + Math.floor(fr() * 8 * (1 - Math.abs(dx) / rw) + 1), y0 = cy + rh - 6;
-      for (let j = 0; j < len; j++) px(g, x + dx, y0 + j, j > len - 2 ? p.grass : j % 3 ? p.greenDark : p.greenDeep);
-    }
+  const W = 520, H = 112, [c, g] = makeCanvas(W, H), rng = mulberry32(73), base = 98, GX = 216, GW = 92;   // the gate spans sprite x 216..308
+  const kinds = ['copy', 'food', 'tin', 'mobile', 'book'];
+  rect(g, 0, base, W, H - base, p.brownDark);                                              // trodden ground
+  for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, base, H - 1), rng() < 0.4 ? p.brown : rng() < 0.5 ? p.tan : p.grayDark);
+  for (let x = 0; x < W; ) {                                                               // the back rank of the town
+    const w = randInt(rng, 16, 27), seed = randInt(rng, 1, 1e6), r = rng();
+    if (x + w > GX - 6 && x < GX + GW + 6) { x = GX + GW + 6; continue; }
+    if (r < 0.15) roundTree(g, x + (w >> 1), base - 2, randInt(rng, 6, 9), randInt(rng, 6, 10), p, seed);
+    else if (r < 0.65) commercialBlock(g, p, lit, x, base - 2, w, randInt(rng, 2, 4), seed);
+    else burgShop(g, p, lit, x, base - 2, w, kinds[Math.floor(rng() * kinds.length)], seed, randInt(rng, 13, 18));
+    x += w + randInt(rng, 0, 2);
   }
-  for (let x = 2; x < W; x += randInt(rng, 3, 6)) {                                          // ferns and undergrowth along the foot
-    const h = randInt(rng, 3, 6);
-    for (let j = 0; j < h; j++) px(g, x + (j > 2 ? (rng() < 0.5 ? -1 : 1) : 0), base - 1 - j, j === h - 1 ? p.grassLight : j % 2 ? p.grass : p.greenDark);
-  }
+  const pil = x0 => {                                                                      // a brick gate pillar with a white cap and a lamp
+    rect(g, x0, base - 40, 10, 40, p.rust); rect(g, x0, base - 40, 1, 40, p.orange); rect(g, x0 + 9, base - 40, 1, 40, p.brownDark);
+    for (let y = base - 38; y < base; y += 3) rect(g, x0, y, 10, 1, p.brownDark);
+    rect(g, x0 - 2, base - 43, 14, 3, p.white); rect(g, x0 - 2, base - 41, 14, 1, p.cloudShade);
+    rect(g, x0 + 4, base - 47, 2, 4, p.grayDark); rect(g, x0 + 3, base - 49, 4, 2, lit ? PALETTE.glow : p.cream);
+    rect(g, x0 - 2, base - 3, 14, 3, p.cloudShade);
+  };
+  pil(GX); pil(GX + GW - 10);
+  rect(g, GX + 10, base - 36, GW - 20, 14, p.greenDark); rect(g, GX + 10, base - 36, GW - 20, 1, p.glow); rect(g, GX + 10, base - 23, GW - 20, 1, p.glow);   // the arch sign
+  drawText2x(g, 'CU', GX + (GW >> 1) - 8, base - 34, p.white);
+  rect(g, GX + 10, base - 44, GW - 20, 8, p.white); drawText(g, 'UNIVERSITY', GX + (GW >> 1) - 19, base - 42, p.greenDark);
+  for (const wx of [GX - 40, GX + GW + 4]) { posterFence(g, p, wx, base, 36, wx + 11); }   // posters on the walls either side
   return c;
 }
 

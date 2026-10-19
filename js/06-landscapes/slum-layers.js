@@ -20,15 +20,6 @@ function slumFar(ctx) {                                  // the city haze: a jag
     const bw = randInt(rng, 16, 24), bh = randInt(rng, 8, 11), top = randInt(rng, 6, 14), tx = x;
     if (ctx.ok(tx)) ctx.stat(tx, tx + bw, 3, (g, p, lit, ox) => slumBillboard(g, p, tx + ox, top, bw, bh, base));
   }
-  for (let x = ctx.from + randInt(rng, 5, 30); x < ctx.to; ) {                                    // utility poles with drooping wires
-    const gap = randInt(rng, 48, 90), ptop = randInt(rng, 18, 28), tx = x;
-    if (ctx.ok(tx)) ctx.stat(tx - 2, tx + gap + 3, 4, (g, p, lit, ox) => {
-      for (const px0 of [tx, tx + gap]) { rect(g, px0 + ox, ptop, 1, base - ptop, p.slate); rect(g, px0 + ox - 3, ptop + 1, 7, 1, p.slate); }
-      for (let k = 0; k < 3; k++)
-        for (let i = 0; i <= gap; i++) px(g, tx + ox + i, ptop + 1 + k * 2 + Math.round(Math.sin(i / gap * Math.PI) * 5), p.slate);
-    });
-    x += gap;
-  }
 }
 
 function slumMid(ctx, dense) {                           // dense: three ranks, shoulder to shoulder with no gaps

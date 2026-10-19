@@ -28,7 +28,7 @@ const sim = {
   nextStop: 0,
   doorOpen: 1,                             // always open: this old local train's doors never close
   riders: null,                            // passengers standing in the doorways
-  roof: null,                              // students sitting on the roofs and the engine's steps
+  roof: null,                              // students on the engine's steps (the carriage roofs stay empty)
   wheelAngle: 0, swayPhase: 0, clock: 0, cloudDrift: 0,
   hour: CONFIG.HOUR_START, night: 1,       // time of day (0..24) and how dark it is (0..1)
   smokeAcc: 0, fluffAcc: 0, flyAcc: 0, sparkAcc: 0,

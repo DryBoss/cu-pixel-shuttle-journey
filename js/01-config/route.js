@@ -13,15 +13,15 @@
 //   idle      extra people standing around
 //   backdrop  extra scenery from BACKDROPS drawn near the station (the
 //             landscape along the line itself comes from TERRAIN below)
-//   extras    station-specific props / characters ('porter', 'fish', 'chests')
+//   extras    station-specific props / characters ('fish', 'chests', 'shops', ...)
 const ROUTE = [
   // km = distance from Bottoli along the line (whole-km figures from rail station listings; Dewanhat is an estimate)
   { en: 'BOTTOLI', bn: 'বটতলী', code: 'BTL', km: 0,
     platform: [-330, 650], roof: 'shed', roofColor: 'rust', oldSlab: true, crowd: 44, alight: 0, idle: 10,
-    backdrop: ['city', 'bottoli'], extras: ['porter', 'clutter'] },
+    backdrop: ['city', 'bottoli'], extras: ['clutter'] },    // no kulis (porters) here: just luggage heaped by the posts
   { en: 'DEWANHAT', bn: 'দেওয়ানহাট', code: 'DWH', km: 2,           // only a stoppage: no platform, no roof, nothing
     platform: [-40, 360], roof: 'shelter', halt: true, crowd: [0, 2], alight: 1, idle: 0,
-    backdrop: ['dewanhat'], extras: ['peanuts', 'locals'] },
+    backdrop: [], extras: ['peanuts', 'locals'] },       // (the road flyover just ahead of the stop is drawn by overpass.js)
   { en: 'JHAWTOLA', bn: 'ঝাউতলা', code: 'JHT', km: 5,
     platform: [-40, 360], roof: 'shelter', noRoof: true, crowd: 16, alight: 6, idle: 2,   // a solid station building, but no shed over the platform
     backdrop: ['jhawtola'], extras: ['hawkers'],
@@ -64,12 +64,10 @@ const ROUTE = [
     villagers: true },             // villagers in lungis and elders, mixed with students in kameez and trousers
   { en: 'CHITTAGONG UNIV.', bn: 'চট্টগ্রাম বিশ্ববিদ্যালয়', code: 'CU', km: 22,
     platform: [-60, 380], roof: 'shelter', noRoof: true, crowd: 0, alight: 40, idle: 2,
-    backdrop: ['cu'], extras: ['shops', 'vendors', 'swarm'],   // no building at all: hills, jungle, a row of tong stalls and the swarm of sellers
+    backdrop: ['cu'], extras: ['shops', 'vendors', 'swarm'],   // no station building: the packed university town behind, a row of tong stalls and the swarm of sellers
     ironLamps: true, manyTaps: true,   // free-standing old iron lamp posts, benches, and water taps scattered along the open slab
     shopKinds: [7, 0, 7, 2, 1, 7, 0, 2, 7, 1],   // 'tong' shops: tea stalls with glowing clay stoves and hanging bananas, snacks, fruit
     swarmCount: 10,                // hawkers and vendors pacing among the stalls
-    canopy: true,                  // old trees meeting overhead: leafy shade everywhere
-    shade: [20, 70, 120, 170, 220, 270, 320],
     students: true },              // the alighting flood is all students in kameez and trousers with bags and backpacks
 ];
 const STATION_DEFAULTS = { platform: [-40, 360], roof: 'canopy', roofColor: 'green',

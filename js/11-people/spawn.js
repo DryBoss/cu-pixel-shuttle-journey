@@ -23,16 +23,16 @@ function populateStation(st) {
   const [L, R] = st.platform;
   const seated = kind => { const d = makeDesign(rng, kind); d.carry = null; return d; };
   const locals = st.extras.includes('locals');                       // a couple of locals in lungis or casual shirts, no luggage
-  const localDesign = r => { const d = makeDesign(r, pick(r, ['lungi', 'lungi', 'trousers'])); d.carry = null; return d; };
+  const localDesign = r => studentDesign(r);                         // every passenger is a student
   const waiting = Array.isArray(st.crowd) ? st.crowd[0] + Math.floor(rng() * (st.crowd[1] - st.crowd[0] + 1)) : st.crowd;
   const studentDesign = r => {                           // CU students: trousers and kameez, nearly all with a backpack or bag
     const d = makeDesign(r, r() < 0.55 ? 'trousers' : 'kameez');
     d.carry = d.kind === 'trousers' ? (r() < 0.82 ? 'backpack' : 'bag') : (r() < 0.55 ? 'bag' : 'backpack');
     return d;
   };
-  const villageMix = () => { const r = rng(); return r < 0.4 ? studentDesign(rng) : r < 0.58 ? makeDesign(rng, 'elder') : localDesign(rng); };   // students in kameez and trousers, elders, villagers in lungis
+  const villageMix = () => { const r = rng(); return r < 0.4 ? studentDesign(rng) : r < 0.58 ? studentDesign(rng) : localDesign(rng); };   // students in kameez and trousers, elders, villagers in lungis
   let vi = 0;
-  const villageDesign = () => { const i = vi++; return i < 2 ? studentDesign(rng) : i === 2 ? makeDesign(rng, 'elder') : i === 3 ? seated('sari') : localDesign(rng); };   // a couple of students, an elder with a cane, mostly lungi-clad locals
+  const villageDesign = () => { const i = vi++; return i < 2 ? studentDesign(rng) : localDesign(rng); };   // a couple of students, an elder with a cane, mostly lungi-clad locals
   for (let i = 0; i < waiting; i++) {                  // waiting to board, spread along the train
     const q = spawnPerson(st, st.village ? villageDesign() : st.villagers ? villageMix() : locals ? localDesign(rng) : st.students && rng() < (st.studentShare || 1) ? studentDesign(rng) : makeDesign(rng),
                 st.village ? 226 + (rng() * 2 - 1) * 34 :           // quietly gathered on the dirt path under the shelter
@@ -47,8 +47,8 @@ function populateStation(st) {
   }
   for (const it of st.layout)                           // someone resting on a bench
     if ((it.type === 'bench' && rng() < 0.5) || ((it.type === 'sleeper' || it.type === 'bricks') && rng() < 0.4))
-      spawnPerson(st, seated(pick(rng, ['lungi', 'trousers', 'sari', 'kameez', 'elder'])), it.x + (it.key === 'woodbench' ? 5 : 3), it.y, rng() < 0.5 ? 1 : -1, 'sit');
-  if (!st.halt && !st.bare) spawnPerson(st, seated(pick(rng, ['lungi', 'trousers'])), PLAT.STALL_X + 31, PLAT.STALL_Y + 2, -1, 'sip');
+      spawnPerson(st, seated(pick(rng, ['trousers', 'kameez'])), it.x + (it.key === 'woodbench' ? 5 : 3), it.y, rng() < 0.5 ? 1 : -1, 'sit');
+  if (!st.halt && !st.bare) spawnPerson(st, seated(pick(rng, ['trousers', 'kameez'])), PLAT.STALL_X + 31, PLAT.STALL_Y + 2, -1, 'sip');
   if (st.liveStall)                                        // students queueing for tea at both sides of the stall
     for (const [dx, dy, dir, kind] of [[37, 7, -1, 'trousers'], [-7, 4, 1, 'kameez'], [-14, 9, 1, 'trousers']]) {
       const d = makeDesign(rng, kind); d.carry = null;
@@ -87,10 +87,5 @@ function populateStation(st) {
     for (let i = 0; i < 14; i++) {
       const q = spawnPerson(st, makeDesign(rng, i % 3 === 0 ? 'hawker' : 'vendor'), 10 + rng() * 330, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, i % 4 === 0 ? 'idle' : 'patrol');
       if (q.mode === 'patrol') { q.ax = 4 + rng() * 140; q.bx = q.ax + 60 + rng() * 170; q.speed = 7 + rng() * 5; }
-    }
-  if (st.extras.includes('clutter'))                       // more porters (kulies) working the long platform
-    for (let i = 0; i < 6; i++) {
-      const q = spawnPerson(st, makeDesign(rng, 'porter'), -300 + rng() * 600, randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'patrol');
-      q.ax = -300 + rng() * 500; q.bx = q.ax + 120 + rng() * 220; q.speed = 8 + rng() * 4;
     }
 }

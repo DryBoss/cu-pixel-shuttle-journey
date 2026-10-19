@@ -9,7 +9,13 @@
 // flag. Row 0 is screen y 70; screen x -460 is the left edge at the stop.
 function buildCantt(p, lit) {
   const OFF = 460, W = 1140, H = 72, [c, g] = makeCanvas(W, H), L = x => x + OFF, rng = mulberry32(1971), END = L(262);
-  rect(g, 0, 22, END + 40, 14, p.green); ditherRect(g, 0, 22, END + 40, 14, p.grass, 5);      // the lawns behind
+  rect(g, 0, 22, END + 40, 36, p.green); ditherRect(g, 0, 22, END + 40, 36, p.grass, 5);      // the lawns behind: they run right down to the gravel, so the barracks stand on the ground
+  for (let y = 36; y < 58; y += 2) ditherRect(g, 0, y, END + 40, 1, p.greenDark, 3);          // mown stripes, a little darker towards the line
+  for (let x = 0; x < 40; x++) for (let y = 22; y < 58; y++) {                                  // the lawn thins out into the surrounding ground at both ends, so it never ends in a hard-edged slab
+    if (bayer(x, y) < (40 - x) / 40 * 16) g.clearRect(x, y, 1, 1);
+    if (bayer(END + 39 - x, y) < (40 - x) / 40 * 16) g.clearRect(END + 39 - x, y, 1, 1);
+  }
+  for (let y = 22; y < 28; y++) for (let x = 40; x < END; x++) if (bayer(x, y) < (28 - y) / 6 * 12) g.clearRect(x, y, 1, 1);   // and softly along the top, where the hedges and trees hide it
   for (const [a, b] of [[-440, -262], [-248, -70], [-56, 122], [136, 258]]) {                  // the barracks, high enough to show above the canopy roof
     canttBarracksLong(g, p, lit, L(a), 22, b - a, 12);
     hedgeRow(g, p, L(a) - 2, b - a + 4, 25, 4);                                                // a clipped hedge along their feet

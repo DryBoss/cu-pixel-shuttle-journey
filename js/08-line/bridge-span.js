@@ -22,7 +22,6 @@ function clipBegin(g, xa, xb) {
 }
 
 function drawLand(g, v, d) {
-  drawTiled(g, v.poles, d, LAYER_Y.poles);
   drawTiled(g, v.track, d, LAYER_Y.track);
   drawCrossingDecks(g, v);
 }

@@ -19,4 +19,4 @@ const KAMEEZ = [['rose', 'white', 'skyMid'], ['skyMid', 'navy', 'white'], ['padd
                 ['purple', 'white', 'rose'], ['orange', 'cream', 'red'], ['green', 'white', 'glow']]; // [kameez, salwar, dupatta]
 const BAGS = ['brown', 'ink', 'red', 'navy', 'grassLight'];
 const PASSENGER_KINDS = ['trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers', 'trousers',
-                         'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'lungi', 'sari', 'elder', 'child'];   // mostly students
+                         'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez', 'kameez'];   // every passenger is a student

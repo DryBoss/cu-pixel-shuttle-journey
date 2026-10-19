@@ -37,8 +37,8 @@ function drawTrain(g, v) {
   if (sim.hornWave > 0) drawHornWaves(g, p);
 }
 
-// Students sitting on the roofs and on the engine's steps: the fuller the train,
-// the more of them (each has its own threshold)
+// Students on the engine's steps (sim.roof holds only those; nobody rides on top of
+// the carriages): the fuller the train, the more of them (each has its own threshold)
 function drawRoofRiders(g, v) {
   if (!sim.roof) return;
   const load = Math.min(1, drive.pax / 150);

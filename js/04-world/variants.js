@@ -40,6 +40,7 @@ function buildVariant(name) {
     cars: Array.from({ length: CONFIG.CAR_COUNT }, (_, i) => buildCar(p, def.lit, i)),
     wheels: buildWheels(p),
     backdrops,
+    flyover: buildFlyover(p, def.lit),
     props: buildProps(p, def.lit),
     stations: STATIONS.map(st => buildStationSprites(st, p)),
   };

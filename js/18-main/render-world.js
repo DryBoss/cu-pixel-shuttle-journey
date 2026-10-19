@@ -13,10 +13,11 @@ function renderWorld(g, v) {
   drawTerrain(g, v, TL.tall);                                             //    chimneys and other tall things behind the mid layer
   drawTerrain(g, v, TL.mid);                                              // 4. fields, river, hills
   drawBackdrops(g, v, 'mid');
-  drawOverpassTraffic(g, v);                                             //    Bottoli's building and yard
+  drawOverpassBack(g, v);                                                //    Dewanhat flyover: the deck and the pier frame behind the train
   drawBirds(g, v);
   drawLine(g, v);                                                         // 5. poles, track, bridge
   drawTrain(g, v);
+  drawOverpassFront(g, v);                                                //    the flyover's near pier frame, in front of the train
   drawSmoke(g, v);
   drawTruss(g, v, true);
   drawOverpassShade(g, v);                                                  //    lattice over the train
