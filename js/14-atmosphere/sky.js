@@ -6,10 +6,10 @@
 // varies with x & 3: a 4 px strip, repeated as a pattern
 const sky = { strip: null, sg: null, img: null, pattern: null, key: -1, cols: new Float32Array(9), tmp: new Float32Array(9) };
 function updateSky(g) {
-  const d = sim.dist, day = 1 - sim.night, deep = sectionWeight('kash', d) * day, mist = sectionWeight('hills', d) * day;
+  const d = sim.dist, day = 1 - sim.night, deep = sectionWeight('kash', d) * day, mist = Math.max(sectionWeight('hills', d), fog.level * 0.85) * day;
   const smog = Math.min(1, sectionWeight('mill', d) + 0.4 * sectionWeight('nasirabad', d)) * day;   // grey, dusty skies over industry
   const rain = weather.level;
-  const key = (((Math.round(sim.hour * 60) * 21 + Math.round(deep * 20)) * 21 + Math.round(mist * 20)) * 21 + Math.round(smog * 20)) * 21 + Math.round(rain * 20);
+  const key = (((Math.round(sim.hour * 60) * 21 + Math.round(deep * 20)) * 21 + Math.round(mist * 20)) * 21 + Math.round(smog * 20)) * 21 + Math.round(rain * 20) + 21 * 21 * 21 * 21 * 1500 * (1 + seasonIndex());
   if (key === sky.key) return;
   sky.key = key;
   if (!sky.strip) { [sky.strip, sky.sg] = makeCanvas(4, H); sky.img = sky.sg.createImageData(4, H); }
@@ -20,7 +20,7 @@ function updateSky(g) {
     v += (SKY_MIST[i] - v) * mist * 0.7;
     v += (SKY_SMOG[i] - v) * smog * 0.75;
     t[i] = SKY_RAIN_NIGHT[i] + (SKY_RAIN_DAY[i] - SKY_RAIN_NIGHT[i]) * day;
-    c[i] = v + (t[i] - v) * rain * 0.65;
+    c[i] = v + (t[i] - v) * rain * (0.65 + 0.2 * sim.wind);   // monsoon skies are the gloomiest
   }
   const out = new Uint32Array(sky.img.data.buffer), Q = 6;
   for (let y = 0; y < H; y++) {

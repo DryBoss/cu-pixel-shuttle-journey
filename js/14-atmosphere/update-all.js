@@ -17,7 +17,6 @@ function update(dt) {
   updateBridge();
   updateBirds(dt);
   updateFluff(dt);
-  updateFireflies(dt);
   updateSparks(dt);
   updateWeather(dt);
   trackSound(dt);

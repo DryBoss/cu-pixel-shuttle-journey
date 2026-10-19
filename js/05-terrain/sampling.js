@@ -33,4 +33,5 @@ function sectionWeight(id, u) {
 // Breeze: waves of wind sweeping back along the line, roughly -1..1
 const windAt = (u, t) => Math.sin(u * 0.016 + t * 1.7) * 0.65 + Math.sin(u * 0.043 + t * 2.9 + 1.7) * 0.35;
 // How far a plant at u leans right now: -1..2 (the breeze mostly blows one way)
-const leanAt = (u, t) => Math.max(-1, Math.min(2, Math.round(windAt(u, t) * 1.7 + 0.4)));
+// (sim.wind 0..1 from the season: monsoon gales push every plant to full lean)
+const leanAt = (u, t) => Math.max(-1, Math.min(2, Math.round(windAt(u, t) * 1.7 * (1 + 0.5 * sim.wind) + 0.4 + 0.9 * sim.wind)));

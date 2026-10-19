@@ -36,7 +36,7 @@ addEventListener('keydown', e => {
   else if (key === 'KeyC') actions.mode();
   else if (key === 'KeyT') actions.time();
   else if (key === 'KeyM') setMuted(!audio.muted);
-  else if (key === 'KeyW') actions.rain();
+  else if (key === 'KeyW') actions.season();
   else if (key === 'KeyN') actions.skip();
   else if (key === 'KeyP' || (key === 'Space' && !ui.complete)) { actions.pause(); e.preventDefault(); }
   else if (!drive.on && (key === 'Digit1' || key === 'Digit2' || key === 'Digit4')) ui.speed = +key.slice(5);

@@ -20,7 +20,7 @@ js/
   11-people/        passenger design, painting, sprites, spawning, boarding, update
   12-journey/       state machine: state, stop, start, update
   13-driver/        DRIVE mode: engine, controls, schedule, scoring, messages, hints
-  14-atmosphere/    time, lighting, sky, sun/moon, tint, glow, fireflies, sparks, weather, rain
+  14-atmosphere/    time, lighting, sky, sun/moon, tint, glow, sparks, weather, rain
   15-ui/            banner, panel, title card, HUD, overlays, cab gauges
   16-audio/         Web Audio engine, beds, horn, synth, drive SFX
   17-input/         route map, toolbar buttons, actions, keyboard, pointer

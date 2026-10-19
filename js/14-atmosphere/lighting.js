@@ -16,10 +16,10 @@ function lightingAt(h) {
   return LIGHT_TMP;
 }
 
-// 0 in daylight .. 1 at night: stars, lamps, fireflies
+// 0 in daylight .. 1 at night: stars, lamps
 function nightAt(h) {
-  if (h >= 7 && h <= 17.5) return 0;
-  if (h > 17.5 && h < 20) return smoothstep((h - 17.5) / 2.5);
+  if (h >= 7 && h <= 16.8) return 0;
+  if (h > 16.8 && h < 19.8) { const u = (h - 16.8) / 3; return 1 - (1 - u) * (1 - u); }   // lamps are already glowing at 17:30
   if (h >= 4.5 && h < 7) return 1 - smoothstep((h - 4.5) / 2.5);
   return 1;
 }

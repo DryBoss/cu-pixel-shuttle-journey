@@ -52,5 +52,6 @@ function beginTrip(driving) {
   ui.title = false;
   if (driving) { setDriveMode(true); resetDrive(); }
   else if (drive.engine === 'OFF') startEngine();
+  announceScenario();                                    // SCENARIO: MONSOON DUSK ...
   syncButtons();
 }

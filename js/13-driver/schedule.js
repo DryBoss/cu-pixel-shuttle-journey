@@ -19,7 +19,7 @@ function buildSchedule() {
   }
   HOURS_PER_S = (CONFIG.HOUR_END - CONFIG.HOUR_START) / SCHEDULE[LAST_STATION].arr;
 }
-const tripHour = t => CONFIG.HOUR_START + t * HOURS_PER_S;
+const tripHour = t => CONFIG.HOUR_START + sim.hourOffset + t * HOURS_PER_S;   // the day's clock starts at the scenario's hour
 const lateMinutes = (t, due) => (t - due) * HOURS_PER_S * 60;
 
 // Where the train may stand at a station and still have every door on the

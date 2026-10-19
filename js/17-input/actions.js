@@ -7,8 +7,8 @@ const actions = {
   pause() { ui.paused = !ui.paused; if (ui.paused) hornOff(); },
   speed() { ui.speed = SPEEDS[(SPEEDS.indexOf(ui.speed) + 1) % SPEEDS.length]; },
   skip() { skipToNextStation(); },
-  time() { ui.timeMode = (ui.timeMode + 1) % TIME_MODES.length; },
-  rain() { ui.rainMode = (ui.rainMode + 1) % RAIN_MODES.length; },
+  time() { if (!drive.on) cycleTimePhase(); },                  // WATCH only: Morning > Midday > Afternoon > Dusk > Night
+  season() { if (!drive.on) cycleSeason(); },                   // WATCH only: Winter > Summer > Monsoon
   mute() {
     // the tap that starts the audio should not also mute it
     if (performance.now() - audio.unlockedAt < 700) { setMuted(false); return; }
@@ -20,7 +20,7 @@ const actions = {
   light() { toggleLight(); },
 };
 for (const [id, act] of [['b-mode', 'mode'], ['b-pause', 'pause'], ['b-speed', 'speed'], ['b-skip', 'skip'], ['b-time', 'time'],
-                         ['b-rain', 'rain'], ['b-mute', 'mute']])
+                         ['b-season', 'season'], ['b-mute', 'mute']])
   btn(id).addEventListener('click', () => { unlockAudio(); actions[act](); syncButtons(); });
 
 // Power and brake step once per tap and keep stepping while held; the horn

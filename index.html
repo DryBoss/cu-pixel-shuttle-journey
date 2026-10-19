@@ -18,7 +18,7 @@
   <button id="b-speed" type="button" class="big aut" aria-label="Speed 1x" title="Speed (1 / 2 / 4)">1x</button>
   <button id="b-skip" type="button" class="aut" aria-label="Skip to next station" title="Next station (N)"><svg viewBox="0 0 16 16"><path d="M3 3h2v1h2v1h2v1h1v1h1v2h-1v1h-1v1H7v1H5v1H3zM12 3h2v10h-2z"/></svg><span>NEXT</span></button>
   <button id="b-time" type="button" class="aut" aria-label="Time of day" title="Time of day (T)"><svg viewBox="0 0 16 16"></svg><span>AUTO</span></button>
-  <button id="b-rain" type="button" class="aut" aria-label="Rain" title="Rain (W)"><svg viewBox="0 0 16 16"><path d="M5 2h5v1h2v1h1v2h1v3H1V6h1V4h1V3h2zM3 11h1v2H3zM7 11h1v2H7zM11 11h1v2h-1zM5 13h1v2H5zM9 13h1v2H9z"/></svg><span>AUTO</span></button>
+  <button id="b-season" type="button" class="aut" aria-label="Season" title="Season (W)"><svg viewBox="0 0 16 16"></svg><span>AUTO</span></button>
   <button id="b-mute" type="button" aria-label="Sound" title="Sound (M)"><svg viewBox="0 0 16 16"></svg><span>TAP</span></button>
 </div>
 <!-- Scripts share ONE global scope and run in this order. See README.md before reordering. -->
@@ -27,6 +27,7 @@
 <script src="js/01-config/route.js"></script>
 <script src="js/01-config/world.js"></script>
 <script src="js/01-config/time.js"></script>
+<script src="js/01-config/scenario.js"></script>
 <script src="js/01-config/palette.js"></script>
 <script src="js/01-config/lighting.js"></script>
 <!-- 02-core : drawing helpers: RNG, pools, canvas, pixel font -->
@@ -179,11 +180,13 @@
 <script src="js/14-atmosphere/tint.js"></script>
 <script src="js/14-atmosphere/lights.js"></script>
 <script src="js/14-atmosphere/glow.js"></script>
-<script src="js/14-atmosphere/fireflies.js"></script>
 <script src="js/14-atmosphere/sparks.js"></script>
 <script src="js/14-atmosphere/shake.js"></script>
 <script src="js/14-atmosphere/weather.js"></script>
 <script src="js/14-atmosphere/rain.js"></script>
+<script src="js/14-atmosphere/fog.js"></script>
+<script src="js/14-atmosphere/overcast.js"></script>
+<script src="js/14-atmosphere/scenario.js"></script>
 <script src="js/14-atmosphere/update-all.js"></script>
 <!-- 15-ui : UI: banner, panel, title, HUD, cab gauges -->
 <script src="js/15-ui/state.js"></script>

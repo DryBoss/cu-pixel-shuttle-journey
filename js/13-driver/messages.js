@@ -4,8 +4,8 @@
 
 // --- messages: toasts across the sky, +10s over the doors -------------------
 const toasts = [], TOAST_LIFE = 2.6;
-function toast(text, col = 'white', big = false) {
-  if (!drive.on) return;
+function toast(text, col = 'white', big = false, always = false) {
+  if (!drive.on && !always) return;                      // driver messages only in DRIVE; scenario toasts (always) in WATCH too
   const last = toasts[toasts.length - 1];
   if (last && last.text === text) { last.t = 0; return; }
   toasts.push({ text, col, big, t: 0 });

@@ -31,7 +31,9 @@ const sim = {
   roof: null,                              // students on the engine's steps (the carriage roofs stay empty)
   wheelAngle: 0, swayPhase: 0, clock: 0, cloudDrift: 0,
   hour: CONFIG.HOUR_START, night: 1,       // time of day (0..24) and how dark it is (0..1)
-  smokeAcc: 0, fluffAcc: 0, flyAcc: 0, sparkAcc: 0,
+  season: 'Winter', timePhase: 'Morning',  // the scenario: chosen independently (scenario.js)
+  hourOffset: 0, wind: 0,                  // trip clock = journeyHour() + hourOffset; wind 0..1 from the season
+  smokeAcc: 0, fluffAcc: 0, sparkAcc: 0,
   people: [], populated: new Set(),
   fxRng: null, wxRng: null,                // seeded: same birds, fluff and weather every trip
   onBridge: false, bridgeMix: 0,           // see updateBridge(); drives the bridge rumble

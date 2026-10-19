@@ -44,10 +44,7 @@ const CONFIG = {
   HOUR_START: 7.25, HOUR_END: 8.25,
   HOUR_EASE: 3,                         // max game hours per second when time jumps (skip, T)
 
-  // weather: light monsoon spells (seeded, so every trip gets the same ones)
-  RAIN_GAP: [35, 80],                   // s of dry weather between spells
-  RAIN_SPELL: [14, 28],                 // s a spell lasts
-  LIGHTNING_RATE: 0.05,                 // strikes per second while it pours
+  // weather is no longer random: the season decides it (see scenario.js)
 
   TRAIN_FRONT_X: 273,                   // screen x of the headlight
   LOCO_W: 46, CAR_W: 39, CAR_GAP: 2, CAR_COUNT: 5,
@@ -55,7 +52,7 @@ const CONFIG = {
   BN_SIZE: 11,                          // px size Bangla text is rasterised at
 
   // particle pools [normal, low quality]; nothing is allocated while running
-  SMOKE_MAX: [70, 40], RAIN_MAX: [180, 100], SPLASH_MAX: [60, 30],
-  SPARK_MAX: [70, 36], FIREFLY_MAX: [40, 20], BIRD_MAX: [8, 5], FLUFF_MAX: [60, 30],
+  SMOKE_MAX: [70, 40], RAIN_MAX: [260, 130], SPLASH_MAX: [60, 30],
+  SPARK_MAX: [70, 36], BIRD_MAX: [8, 5], FLUFF_MAX: [60, 30],
   LOW_QUALITY_MS: 11,                   // average frame cost that switches to low quality
 };

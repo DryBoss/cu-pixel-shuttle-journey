@@ -22,14 +22,14 @@ function drawDebug(g) {
     'DIST  ' + Math.floor(sim.dist) + ' PX',
     (stopped ? 'AT    ' : 'NEXT  ') + st.en,
     stopped ? 'PEOPLE ' + sim.people.length : 'IN    ' + Math.ceil(sim.nextStop - sim.dist) + ' PX',
-    'TIME  ' + hhmm(sim.hour) + ' ' + TIME_MODES[ui.timeMode][0] + (weather.level > 0.05 ? ' RAIN ' + Math.round(weather.level * 100) : ''),
+    'TIME  ' + hhmm(sim.hour) + ' ' + phaseDef().name + ' ' + seasonDef().name + (weather.level > 0.05 ? ' RAIN ' + Math.round(weather.level * 100) : '') + (fog.level > 0.05 ? ' FOG ' + Math.round(fog.level * 100) : ''),
     'LAND  ' + landLabel() + (sim.onBridge ? ' BRIDGE' : ''),
   ];
   if (drive.on) lines.push('DRIVE ' + drive.engine + ' ' + leverLabel(drive.lever) + ' RPM ' + Math.round(drive.rpm * 100) +
                            ' A ' + drive.accel.toFixed(1), 'TRIP ' + Math.round(drive.tripT) + ' S  OFFSET ' + Math.round(sim.dist - (STATIONS[sim.station + 1] || STATIONS[sim.station]).dist));
   if (timeScale() !== 1) lines.push(ui.paused ? 'PAUSED' : 'SPEED X' + timeScale());
   if (quality.low) lines.push('LOW QUALITY ' + quality.ema.toFixed(1) + ' MS');
-  lines.push('P PAUSE  N NEXT  T TIME  W RAIN  C DRIVE', 'M SOUND  1/2/4 SPEED  R RESTART');
+  lines.push('P PAUSE  N NEXT  T TIME  W SEASON  C DRIVE', 'M SOUND  1/2/4 SPEED  R RESTART');
   const w = Math.max(...lines.map(textWidth)) + 6, h = lines.length * 7 + 4;
   rect(g, 2, 2, w, h, PALETTE.slate);
   rect(g, 3, 3, w - 2, h - 2, PALETTE.ink);

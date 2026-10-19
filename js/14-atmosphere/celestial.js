@@ -46,10 +46,11 @@ function placeCelestial() {
 
 function drawCelestial(g) {
   const n = sim.night * (1 - weather.level * 0.85), t = sim.clock;
-  if (n > 0.02) {                                       // stars: fade in by threshold, some twinkle
+  const sn = Math.max(0, (n - 0.45) / 0.55);            // stars wait for real darkness, not golden hour
+  if (sn > 0.02) {                                      // stars: fade in by threshold, some twinkle
     for (let i = 0; i < STARS.length; i++) {
       const s = STARS[i];
-      if (s.th > n * 1.15 - 0.1) continue;
+      if (s.th > sn * 1.15 - 0.1) continue;
       const tw = Math.sin(t * 2.3 + s.ph);
       g.fillStyle = tw > 0.8 ? PALETTE.white : tw > -0.4 ? PALETTE.cloudShade : PALETTE.grayLight;
       g.fillRect(s.x, s.y, 1, 1);
@@ -63,15 +64,8 @@ function drawCelestial(g) {
   }
   if (celestial.sunUp) {
     const low = celestial.sunLow, spr = SUN_SPRITES[low > 0.82 ? 2 : low > 0.55 ? 1 : 0], r = spr.width >> 1;
-    g.globalAlpha = 1 - weather.level * 0.8;            // the sun hides behind rain clouds
+    g.globalAlpha = Math.max(0.15, 1 - weather.level * 0.8 - fog.level * 0.45);   // the sun hides behind rain clouds and mist
     g.drawImage(spr, celestial.sunX - r, celestial.sunY - r);
     g.globalAlpha = 1;
-  }
-  if (weather.flash > 0 && weather.boltN) {            // a far-off bolt, behind the hills
-    g.fillStyle = PALETTE.white;
-    for (let i = 0; i < weather.boltN - 1; i++) {
-      const x0 = weather.bolt[i * 2], y0 = weather.bolt[i * 2 + 1], x1 = weather.bolt[i * 2 + 2], y1 = weather.bolt[i * 2 + 3];
-      for (let y = y0; y < y1; y++) g.fillRect(Math.round(x0 + (x1 - x0) * (y - y0) / (y1 - y0)), y, 1, 1);
-    }
   }
 }

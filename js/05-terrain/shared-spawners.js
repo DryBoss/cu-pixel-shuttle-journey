@@ -62,7 +62,11 @@ function fogBands(ctx, y0, y1, gap, dens) {
     if (!ctx.ok(x + (w >> 1))) continue;
     const key = 'fog' + w + '|' + h + '|' + dens;
     ctx.live({ x0: lx - drift, x1: lx + w + drift, z: 100 + y, warm: v => fogSprite(v, key, w, h, dens), draw(g, v, ox, oy, t) {
+      const k = terrainFogScale();                       // none in Summer, thick on a Winter morning
+      if (k <= 0.01) return;
+      if (k < 1) g.globalAlpha = k;
       g.drawImage(fogSprite(v, key, w, h, dens), Math.round(lx + Math.sin(t * 0.03 + ph) * drift) + ox, y + oy);
+      if (k < 1) g.globalAlpha = 1;
     } });
   }
 }

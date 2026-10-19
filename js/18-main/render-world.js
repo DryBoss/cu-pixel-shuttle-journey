@@ -7,13 +7,14 @@
 function renderWorld(g, v) {
   const d = sim.dist;
   drawTiled(g, v.clouds, d * PARALLAX.clouds + sim.cloudDrift, LAYER_Y.clouds);   // 2. clouds
-  drawCumulus(g, v, sectionWeight('kash', d));
+  drawOvercast(g, v);                                                     //    monsoon: a heavy grey sky
   drawBackdrops(g, v, 'far');                                             //    Dhaka skyline
   drawTerrain(g, v, TL.far);                                              // 3. distant land
   drawTerrain(g, v, TL.tall);                                             //    chimneys and other tall things behind the mid layer
   drawTerrain(g, v, TL.mid);                                              // 4. fields, river, hills
   drawBackdrops(g, v, 'mid');
   drawOverpassBack(g, v);                                                //    Dewanhat flyover: the deck and the pier frame behind the train
+  drawFog(g, v, false);                                                   //    mist banks behind the train
   drawBirds(g, v);
   drawLine(g, v);                                                         // 5. poles, track, bridge
   drawTrain(g, v);
@@ -26,4 +27,5 @@ function renderWorld(g, v) {
   drawCrossings(g, v);                                                  //    the other lines at Bottoli
   drawStationFront(g, v);                                                 //    platform, people
   drawFluff(g, v);
+  drawFog(g, v, true);                                                    //    low mist and haze in front of everything
 }

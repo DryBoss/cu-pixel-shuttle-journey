@@ -7,7 +7,7 @@
 // =====================================================================
 const canvas = document.getElementById('screen');
 const ui = { bannerY: -40, bannerSt: 1, complete: false, panelY: -150, hover: false, debugW: 0,
-             paused: false, speed: 1, timeMode: 0, rainMode: 0,      // toolbar state
+             paused: false, speed: 1,                                  // toolbar state (season / time live in sim)
              title: true, titleSel: 1 };                              // title card: 0 WATCH, 1 DRIVE
 const input = { debug: false, fast: false };
 

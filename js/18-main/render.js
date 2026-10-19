@@ -39,7 +39,7 @@ function render() {
   if (driving) { drawDriveHUD(ctx); drawHint(ctx); }
   if (input.debug) drawDebug(ctx);
   drawBanner(ctx);
-  if (driving) drawToasts(ctx);
+  if (!ui.title) drawToasts(ctx);                                        // scenario toasts show in WATCH too
   drawPanel(ctx);
   if (ui.title) drawTitle(ctx);
   else if (driving && ui.paused) drawPaused(ctx);

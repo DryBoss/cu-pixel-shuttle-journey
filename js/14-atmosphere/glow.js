@@ -30,8 +30,14 @@ const GLOW = (() => {
   lin.addColorStop(1, 'rgba(255,220,140,0)');
   cg.fillStyle = lin;
   cg.beginPath(); cg.moveTo(0, 6); cg.lineTo(90, 2); cg.lineTo(90, 50); cg.lineTo(0, 9); cg.closePath(); cg.fill();
-  return { halos, train, trainY: y0, cone, flare: haloSprite(9, '255,240,190', 0.9), door: haloSprite(8, warm, 0.6),
-           fly: haloSprite(4, '220,255,120', 0.9), moon: haloSprite(22, '190,200,255', 0.35),
+  // a second, wider and fainter cone behind it: the glowing air around the beam
+  const [cone2, c2g] = makeCanvas(76, 64), lin2 = c2g.createLinearGradient(0, 0, 76, 0);
+  lin2.addColorStop(0, 'rgba(255,240,190,0.3)');
+  lin2.addColorStop(1, 'rgba(255,230,160,0)');
+  c2g.fillStyle = lin2;
+  c2g.beginPath(); c2g.moveTo(0, 7); c2g.lineTo(76, 0); c2g.lineTo(76, 64); c2g.closePath(); c2g.fill();
+  return { halos, train, trainY: y0, cone, cone2, flare: haloSprite(9, '255,240,190', 0.9), door: haloSprite(8, warm, 0.6),
+           moon: haloSprite(22, '190,200,255', 0.35),
            sun: haloSprite(40, '255,170,90', 0.45), spark: haloSprite(3, '255,190,90', 0.9) };
 })();
 
@@ -46,18 +52,20 @@ function drawGlow(g) {
       const spr = GLOW.halos[lights.k[i]], r = spr.width >> 1;
       g.drawImage(spr, Math.round(lights.x[i]) - r, Math.round(lights.y[i]) - r);
     }
-    g.globalAlpha = n;
-    if (drive.engine !== 'OFF' && (drive.headlight || !drive.on)) {   // the headlight needs the engine
+    if (celestial.moonUp) { g.globalAlpha = n * (1 - weather.level); g.drawImage(GLOW.moon, celestial.moonX - 22, celestial.moonY - 22); }
+  }
+  // headlight: a cone thrown forward and down onto the track. It needs the engine, works day or night
+  // (a driver can switch it on in daylight; in WATCH it comes on by itself in the dark and in murk)
+  const murk = Math.max(weather.level, fog.level), beam = Math.max(n, drive.on ? 1 : 0.4 * murk);
+  if (beam > 0.02 && drive.engine !== 'OFF' && (drive.headlight || !drive.on)) {
+    g.globalAlpha = Math.min(1, beam * (1 + 0.7 * murk));   // rain and fog catch the beam
+    g.drawImage(GLOW.cone2, CONFIG.TRAIN_FRONT_X, LAYER_Y.loco - 2);
+    g.drawImage(GLOW.cone, CONFIG.TRAIN_FRONT_X, LAYER_Y.loco);
+    g.drawImage(GLOW.flare, CONFIG.TRAIN_FRONT_X - 8, LAYER_Y.loco - 3);
+    if (n < 0.5) {                                      // in daylight the beam needs more punch to show against the bright sky
       g.drawImage(GLOW.cone, CONFIG.TRAIN_FRONT_X, LAYER_Y.loco);
       g.drawImage(GLOW.flare, CONFIG.TRAIN_FRONT_X - 8, LAYER_Y.loco - 3);
     }
-    for (let i = 0; i < fireflyPool.n; i++) {
-      const f = fireflyPool.items[i], b = Math.sin(f.age * f.rate + f.ph);
-      if (b <= 0.1) continue;
-      g.globalAlpha = n * b * Math.min(1, f.age, f.life - f.age);
-      g.drawImage(GLOW.fly, Math.round(f.x) - 4, Math.round(f.y) - 4);
-    }
-    if (celestial.moonUp) { g.globalAlpha = n * (1 - weather.level); g.drawImage(GLOW.moon, celestial.moonX - 22, celestial.moonY - 22); }
   }
   if (celestial.sunUp && celestial.sunLow > 0.5) {      // the low sun blooms
     g.globalAlpha = (celestial.sunLow - 0.5) * 2 * (1 - weather.level);
@@ -71,15 +79,12 @@ function drawGlow(g) {
     g.fillRect(x, y, 1, 1);
     g.fillRect(Math.round(s.x - s.vx * 0.015), Math.round(s.y - s.vy * 0.015), 1, 1);
   }
+  drawBolt(g);
   if (weather.flash > 0.01) {                           // lightning lights up everything for an instant
     g.globalAlpha = weather.flash * 0.45;
     g.fillStyle = '#9aa4d8';
     g.fillRect(-2, -2, W + 4, H + 4);
     g.globalAlpha = 1;
-  }
-  for (let i = 0; i < fireflyPool.n && n > 0.02; i++) { // firefly cores
-    const f = fireflyPool.items[i];
-    if (Math.sin(f.age * f.rate + f.ph) > 0.5) { g.fillStyle = PALETTE.glow; g.fillRect(Math.round(f.x), Math.round(f.y), 1, 1); }
   }
   g.globalCompositeOperation = 'source-over';
 }

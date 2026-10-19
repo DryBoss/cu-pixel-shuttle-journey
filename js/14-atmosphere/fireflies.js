@@ -1,12 +1,14 @@
 'use strict';
 // js/14-atmosphere/fireflies.js
-// Defines: fireflyPool, updateFireflies
+// Defines: fireflyPool, fireflyWeather, updateFireflies
 
 // --- fireflies ---------------------------------------------------------------
 const fireflyPool = makePool(CONFIG.FIREFLY_MAX[0], () => ({ x: 0, y: 0, depth: 0, age: 0, life: 0, ph: 0, rate: 0 }));
+// Fireflies only come out on a dry night: Night, and any season but Monsoon
+const fireflyWeather = () => sim.timePhase === 'Night' && sim.season !== 'Monsoon';
 function updateFireflies(dt) {
-  const n = sim.night, rng = sim.fxRng;
-  sim.flyAcc += 7 * Math.max(0, n - 0.4) * (1 - sectionWeight('river', sim.dist)) * (1 - weather.level) * dt;
+  const rng = sim.fxRng;
+  sim.flyAcc += (fireflyWeather() ? 9 : 0) * (1 - sectionWeight('river', sim.dist)) * dt;
   while (sim.flyAcc >= 1) {
     sim.flyAcc -= 1;
     const f = poolSpawn(fireflyPool, cap('FIREFLY_MAX'));
