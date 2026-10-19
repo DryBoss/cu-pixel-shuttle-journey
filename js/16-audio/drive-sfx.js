@@ -1,6 +1,6 @@
 'use strict';
 // js/16-audio/drive-sfx.js
-// Defines: playCrank, playThump, playAir, playNotch, playBeep, playChime, playScore, playThunder
+// Defines: playCrank, playThump, playAir, playNotch, playBeep, playChime, playScore, playThunder, playScreech, playBang
 
 // Starter motor: a rising whine and the engine turning over, faster and faster
 function playCrank() {
@@ -55,4 +55,39 @@ function playThunder(strength) {
   g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
   src.connect(lp); lp.connect(g); g.connect(audio.master);
   src.start(t, Math.random()); src.stop(t + 3.3);
+}
+
+// Wheel slip: steel wheels spinning on steel rails - a harsh, shrieking, metallic scream
+function playScreech() {
+  if (!audioOn()) return;
+  const ac = audio.ctx, t = ac.currentTime + 0.01, dur = 0.6;
+  for (const [f0, f1, vol] of [[1850, 2450, 0.06], [2780, 3500, 0.035], [1240, 1500, 0.04]]) {
+    const o = ac.createOscillator(), bp = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.linearRampToValueAtTime(f1, t + dur * 0.45);
+    o.frequency.linearRampToValueAtTime(f0 * 0.88, t + dur);
+    bp.type = 'bandpass'; bp.frequency.value = f0 * 1.25; bp.Q.value = 5;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(bp); bp.connect(g); g.connect(audio.master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  noiseHit(t, dur, 'bandpass', 3400, 3, 0.14);
+}
+
+// Coupler slack: a violent iron BANG and the rattle of the rake running in
+function playBang() {
+  if (!audioOn()) return;
+  const t = audio.ctx.currentTime + 0.005;
+  playThump(0.9);
+  tone(t, 150, 0.5, 0.16, 'square');
+  tone(t + 0.005, 1180, 0.4, 0.08, 'sawtooth');
+  tone(t + 0.01, 1760, 0.28, 0.05, 'square');
+  noiseHit(t, 0.4, 'bandpass', 900, 0.8, 0.4);
+  for (let k = 1; k <= 4; k++) {                                                      // carriage after carriage taking up the slack
+    tone(t + 0.07 * k, 130 + k * 22, 0.22, 0.09 / k, 'square');
+    noiseHit(t + 0.07 * k, 0.2, 'bandpass', 1300, 1, 0.2 / k);
+  }
 }

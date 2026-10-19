@@ -1,20 +1,35 @@
 'use strict';
 // js/13-driver/schedule.js
-// Defines: SCHEDULE, HOURS_PER_S, buildSchedule, tripHour, lateMinutes, DOORS_LO, STOP_WIN, stopWindow, speedLimitAt
+// Defines: SCHEDULE, HOURS_PER_S, legTime, buildSchedule, tripHour, lateMinutes, DOORS_LO, STOP_WIN, stopWindow, speedLimitAt
 
-// Timetable: each leg run a little under the line speed, plus time to get
-// going and to stop, plus some slack; a dwell at each stop. Built once the
+// Timetable: each leg as long as a sensible driver needs (legTime), a margin and
+// some slack; a dwell at each stop. Built once the
 // terrain (and so the speed limits) is laid out. The day's clock runs on
 // it, so a late train arrives later in the evening.
 const SCHEDULE = [];
 let HOURS_PER_S = 0;
+// How long a sensible driver needs for one leg with THIS train: modest power off the mark, full power up
+// to the limit, a coast, then brakes in good time (they lag). The timetable follows from it, so it
+// stays honest whatever the locomotive's weight.
+function legTime(d0, d1) {
+  const D = CONFIG.DRIVE, dt = 0.25;
+  let v = 0, d = d0, t = 0;
+  while (d < d1 - 12 && t < 3000) {
+    const lim = speedLimitAt(d) - 6, ahead = speedLimitAt(d + v * 7) - 6, rem = d1 - d;
+    const braking = rem < v * D.BRAKE_DELAY + v * v / (2 * D.BRAKE * 2.6) + 12 || v > Math.max(ahead, 14);
+    const power = !braking && v < lim ? (v < D.SLIP_SPEED ? 6 : 8) / D.NOTCHES : 0;
+    const a = power * D.ACCEL * Math.min(1, D.KNEE / Math.max(v, 1)) - D.GRAVITY * gradeAt(d) - (D.DRAG[0] + D.DRAG[1] * v * v) - (braking && v > 0 ? D.BRAKE * 2.6 : 0);
+    const nv = Math.max(braking && rem > 12 ? 3 : 0, v + a * dt);
+    d += (v + nv) / 2 * dt; v = nv; t += dt;
+  }
+  return t;
+}
+
 function buildSchedule() {
   const D = CONFIG.DRIVE;
   SCHEDULE.push({ arr: 0, dep: D.FIRST_DEP });
   for (let i = 1; i < STATIONS.length; i++) {
-    let run = 0;
-    for (let d = STATIONS[i - 1].dist; d < STATIONS[i].dist; d += 10) run += 10 / Math.min(D.SCHED_SPEED, speedLimitAt(d) - 6);
-    const arr = SCHEDULE[i - 1].dep + run + (CONFIG.ACCEL_TIME + CONFIG.BRAKE_TIME) / 2 + D.SLACK;
+    const arr = SCHEDULE[i - 1].dep + legTime(STATIONS[i - 1].dist, STATIONS[i].dist) * D.SCHED_MARGIN + D.SLACK;
     SCHEDULE.push({ arr, dep: arr + D.DWELL });
   }
   HOURS_PER_S = (CONFIG.HOUR_END - CONFIG.HOUR_START) / SCHEDULE[LAST_STATION].arr;
@@ -38,7 +53,7 @@ function stopWindow(st) {
 function speedLimitAt(d) {
   const D = CONFIG.DRIVE;
   let lim = sectionWeight('tea', d) > 0.5 ? D.LIMIT_HILLS : D.LIMIT;
-  if (sectionWeight('hills', d) > 0.5) lim = D.LIMIT_CU_HILLS;                       // the winding hill track into the University: brake hard, well before the terminus
+  if (gradeAt(d) > 0.5) lim = D.LIMIT_CU_HILLS;                                      // the steep winding track into the University hills
   if (BRIDGE.spans && d > BRIDGE.u0 - 460 && d < BRIDGE.u1 + 140) lim = Math.min(lim, D.LIMIT_BRIDGE);   // from Bhairab over the Meghna
   for (let i = 0; i < STATIONS.length; i++)
     if (d > STATIONS[i].dist - 280 && d < STATIONS[i].dist + 160) return Math.min(lim, D.LIMIT_STATION);

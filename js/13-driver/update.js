@@ -3,30 +3,56 @@
 // Defines: updateDrive, depart, checkArrival, checkSpeed, checkLine
 
 // --- driving ----------------------------------------------------------------
-// Traction follows the engine (it has to spool up), fades at speed and is
-// cut while a door is open; brakes, rolling and air resistance oppose it
+// A heavy diesel and a full rake of steel carriages. Traction follows the engine (it has to spool up),
+// fades at speed, is cut while a door is open and is nearly lost in a wheel slip. Against it: rolling and
+// air drag (small: it coasts for minutes), the air brakes (which take their time) and, on the climb
+// into the University hills, gravity. The train's speed is signed so it can roll back down the slope.
 function updateDrive(dt) {
-  const D = CONFIG.DRIVE, v = sim.speed;
+  const D = CONFIG.DRIVE;
   drive.tripT += dt;
   drive.lever = drive.brake > 0 ? -drive.brake : drive.throttle;
+  if (Math.abs(drive.vel) !== sim.speed) drive.vel = (drive.vel < 0 ? -1 : 1) * sim.speed;   // arrive() and friends set sim.speed directly
+  const v = drive.vel, av = sim.speed;
   if (sim.state === 'STOPPED') updateStop(dt);
   const boarding = sim.state === 'STOPPED' && (sim.stopPhase === 'SETTLE' || sim.stopPhase === 'DOORS_OPEN' || sim.stopPhase === 'BOARDING');   // no pulling out mid-boarding
   const power = drive.lever > 0 && drive.engine === 'ON' && !boarding && !ui.complete ? drive.lever / D.NOTCHES : 0;
-  const trac = Math.min(power, Math.max(0, (drive.rpm - 0.3) / 0.7)) * D.ACCEL * Math.min(1, D.KNEE / Math.max(v, 1));
+  updateSlack(dt);
+  updateSlip(dt, power);
+  let trac = Math.min(power, Math.max(0, (drive.rpm - 0.3) / 0.7)) * D.ACCEL * Math.min(1, D.KNEE / Math.max(av, 1));
+  if (drive.slip) trac *= D.SLIP_TRAC;                  // the wheels spin, the train hardly moves
   if (sim.state === 'STOPPED') {
     drive.accel = 0;
     if (trac <= 0 || !depart()) return;
   }
-  const brakeWant = drive.lever === EB ? D.EMERGENCY : drive.lever < 0 ? -drive.lever * D.BRAKE : 0;       // air brakes take a moment to bite, and to let go
-  const bk = brakeWant > drive.brakeAcc ? (drive.lever === EB ? 6 : 1.1) : 0.8;
-  drive.brakeAcc += (brakeWant - drive.brakeAcc) * Math.min(1, dt * bk);
-  if (Math.abs(brakeWant - drive.brakeAcc) < 0.02) drive.brakeAcc = brakeWant;
-  const brake = drive.brakeAcc;
-  const resist = v > 0 ? D.DRAG[0] + D.DRAG[1] * v * v + brake : 0;
-  sim.speed = Math.max(0, v + (trac - resist) * dt);
-  sim.dist += (v + sim.speed) / 2 * dt;
-  drive.accel = (sim.speed - v) / dt;
-  if (v > 1.5 && sim.speed === 0) sim.shake = Math.max(sim.shake, drive.lever <= -3 ? 1.2 : 0.5);   // the brakes hold
+  // air brakes: the command takes a moment to travel down the pipe, then the pressure builds (or bleeds off) slowly
+  const cmd = drive.lever === EB ? D.EMERGENCY : drive.lever < 0 ? -drive.lever * D.BRAKE : 0;
+  if (cmd !== drive.brakeCmd) {
+    if (drive.brakeWait <= 0) drive.brakeWait = cmd === D.EMERGENCY ? D.EMG_DELAY : cmd > drive.brakeEff ? D.BRAKE_DELAY : D.RELEASE_DELAY;
+    drive.brakeCmd = cmd;
+  }
+  if (drive.brakeWait > 0) drive.brakeWait -= dt;
+  if (drive.brakeWait <= 0) drive.brakeEff = drive.brakeCmd;
+  const rate = drive.brakeEff > drive.brakeAcc ? (drive.brakeEff >= D.EMERGENCY ? D.BRAKE_EMG_RATE : D.BRAKE_APPLY) : D.BRAKE_RELEASE;
+  drive.brakeAcc += (drive.brakeEff - drive.brakeAcc) * Math.min(1, dt * rate);
+  if (Math.abs(drive.brakeEff - drive.brakeAcc) < 0.02) drive.brakeAcc = drive.brakeEff;
+  // forces along the line
+  const grade = gradeAt(sim.dist);
+  drive.grade = grade;
+  if (grade > 0.5 && !drive.climbing) { drive.climbing = true; toast('UPHILL TO THE UNIVERSITY - KEEP THE POWER ON', 'amber'); }
+  else if (grade < 0.1) drive.climbing = false;
+  const push = trac - D.GRAVITY * grade;                // net pull forwards; the slope drags the train back
+  const resist = D.DRAG[0] + D.DRAG[1] * v * v + drive.brakeAcc;   // always opposes the motion
+  let nv;
+  if (v === 0 && Math.abs(push) <= resist) nv = 0;      // held by the brakes and the rails
+  else {
+    nv = v + (push - (v !== 0 ? Math.sign(v) : Math.sign(push)) * resist) * dt;
+    if (v !== 0 && Math.sign(nv) !== Math.sign(v)) nv = 0;   // friction brings it to rest; if the slope wins it then starts back
+  }
+  drive.vel = nv;
+  sim.speed = Math.abs(nv);
+  sim.dist += (v + nv) / 2 * dt;
+  drive.accel = (nv - v) / dt;
+  if (av > 1.5 && sim.speed === 0) sim.shake = Math.max(sim.shake, drive.lever <= -3 ? 1.2 : 0.5);   // the brakes hold
   const harsh = Math.abs(drive.accel) - D.COMFORT_ACCEL;  // passengers thrown about
   if (harsh > 0) drive.comfort = Math.max(0, drive.comfort - harsh * dt * 1.5);
   checkSpeed(dt);

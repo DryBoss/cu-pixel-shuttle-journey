@@ -13,6 +13,7 @@ function setThrottle(n) {
   const was = drive.throttle;
   drive.throttle = n;
   playNotch();
+  if (drive.on) clunk();                                 // the lever locks into its notch
   syncLever();
   if (n > 0 && was === 0) {
     if (drive.engine === 'OFF' || drive.engine === 'SHUTDOWN') toast('START THE ENGINE [E]', 'amber');
@@ -25,6 +26,7 @@ function setBrake(n) {
   const was = drive.brake;
   drive.brake = n;
   playNotch();
+  if (drive.on) clunk();                                 // ... and so does the brake handle
   syncLever();
   if (n === 5) { toast('EMERGENCY BRAKE!', 'red'); playAir(1.3, 0.14); }
   else if (n > was) playAir(0.4, 0.05);
@@ -36,6 +38,7 @@ function setLever(n) {
   drive.lever = Math.max(EB, Math.min(CONFIG.DRIVE.NOTCHES, n));
   if (drive.lever === was) return;
   playNotch();
+  if (drive.on) clunk();
   if (drive.lever === EB) { toast('EMERGENCY BRAKE!', 'red'); playAir(1.3, 0.14); }
   else if (was < 0 && drive.lever >= 0 && sim.speed < 1) playAir(0.5, 0.04);    // brakes released
   if (drive.lever > 0 && was <= 0) {

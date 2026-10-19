@@ -22,7 +22,10 @@ function driveHint() {
     }
     return '';
   }
+  if (drive.slip) return 'WHEEL SLIP! EASE OFF THE POWER';
   if (drive.over) return 'SLOW DOWN! LIMIT ' + drive.limit;
+  if (drive.vel < -0.5) return 'ROLLING BACK! BRAKE!';
+  if (drive.grade > 0.5 && drive.lever <= 0 && sim.speed < 30) return 'UPHILL! NEED POWER';
   const st = STATIONS[sim.station + 1];
   if (!st) return '';
   const o = sim.dist - st.dist, w = stopWindow(st);
