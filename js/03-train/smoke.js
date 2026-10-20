@@ -24,11 +24,10 @@ function updateSmoke(dt) {
   let rate = 0, revving = false;
   if (e === 'CRANK') rate = 2.5;
   else if (e === 'SHUTDOWN') rate = 0.6;
-  else if (e === 'ON' && drive.on) { rate = 1.5 + Math.max(0, drive.rpm - 0.3) * 16; revving = drive.rpm > 0.72; }
-  else if (e === 'ON') {
-    revving = st === 'DEPARTING' || sim.stopPhase === 'HORN';
-    rate = revving ? 12 : st === 'TRAVELING' ? 5 : st === 'ARRIVING' ? 3
-         : sim.stopPhase === 'TERMINUS' ? 0.8 : 1.5;
+  else if (e === 'ON' && (drive.on || st === 'DRIVING')) { rate = 1.5 + Math.max(0, drive.rpm - 0.3) * 16; revving = drive.rpm > 0.72; }
+  else if (e === 'ON') {                                 // standing at a platform in AUTO
+    revving = sim.stopPhase === 'HORN';
+    rate = revving ? 12 : sim.stopPhase === 'TERMINUS' ? 0.8 : 1.5;
   }
   sim.smokeAcc += rate * dt;
   while (sim.smokeAcc >= 1) { sim.smokeAcc -= 1; emitPuff(revving); }

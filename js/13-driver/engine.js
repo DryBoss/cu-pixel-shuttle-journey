@@ -44,8 +44,8 @@ function updateEngine(dt) {
       if (drive.engineT >= D.SHUTDOWN_TIME) { setEngine('OFF'); playAir(0.9, 0.07); }
       break;
     case 'ON':
-      target = drive.on ? 0.3 + 0.7 * Math.max(0, drive.lever) / D.NOTCHES
-             : sim.state === 'DEPARTING' ? 0.95 : sim.state === 'TRAVELING' ? 0.65 : sim.stopPhase === 'HORN' ? 0.6 : 0.3;
+      target = drive.on || sim.state === 'DRIVING' ? 0.3 + 0.7 * Math.max(0, drive.lever) / D.NOTCHES   // (the autopilot works the same lever)
+             : sim.stopPhase === 'HORN' ? 0.6 : 0.3;
       if (target > drive.rpm) rate = 0.6;               // spools up a little faster than it winds down
       break;
   }

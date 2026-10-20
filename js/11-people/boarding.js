@@ -7,14 +7,17 @@
 // DOORS + sim.stopOffset in stop coordinates.
 function startBoarding(st) {
   const terminus = st.index === LAST_STATION, o = Math.round(sim.stopOffset);
-  // everyone gets off at the end of the line; a driver can't deliver more than they carry
-  const alight = terminus ? Math.max(st.alight, Math.min(40, drive.pax)) : drive.on ? Math.min(st.alight, drive.pax) : st.alight;
+  // Nobody gets off anywhere on the way (every stop's alight is 0): the shuttle is for students going TO the
+  // university. At the end of the line EVERYONE aboard gets off - the whole carried head count (plus the few standing
+  // in the doorways), so a full train empties out and an empty one still releases a handful.
+  const alight = terminus ? Math.min(220, Math.max(st.alight, drive.pax + 12)) : drive.on ? Math.min(st.alight, drive.pax) : st.alight;
+  if (terminus) sim.riders = null;                       // the students holding the doorways step off with the rest
   for (let i = 0; i < alight; i++) {
     const door = DOORS[Math.floor(Math.random() * DOORS.length)] + o, x = door + 2;
-    const q = spawnPerson(st, st.students ? makeStudentDesign(Math.random) : makeDesign(Math.random), x, PLAT.DOOR_FLOOR, x - o < 150 ? -1 : 1, 'alight');
+    const q = spawnPerson(st, makeStudentDesign(Math.random), x, PLAT.DOOR_FLOOR, x - o < 150 ? -1 : 1, 'alight');
     const y = randWalkY(Math.random, st.tight), exit = (x - o < 150 ? -24 : W + 24) + o;   // just off screen
     q.hidden = true;
-    q.delay = i * (terminus ? (st.students ? 0.14 : 0.28) : 0.4) + Math.random() * 0.6;   // at a student terminus the wave is nearly unbroken
+    q.delay = i * (terminus ? 0.075 : 0.4) + Math.random() * 0.6;   // at the terminus the wave of students is nearly unbroken
     q.path = [{ x, y: PLAT.EDGE_Y, clip: door, speed: 18, then: passengerOut },
               { x: x + Math.sign(exit - x) * 4, y },
               { x: exit, y, then: gone }];

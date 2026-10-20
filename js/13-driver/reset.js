@@ -29,14 +29,12 @@ function setDriveMode(on) {
   } else {
     hornOff();
     if (drive.engine === 'OFF' || drive.engine === 'SHUTDOWN') startEngine();
+    auto.tick = 0; auto.n = drive.brake;                // the autopilot picks up wherever the driver left the train
     if (sim.state === 'DRIVING') {
       const st = STATIONS[sim.station + 1], o = st ? sim.dist - st.dist : 0, w = st && stopWindow(st);
       if (st && (sim.speed < 1 || st.index === LAST_STATION) && o >= w[0] && o <= w[1]) {
         arrive(st.index, o);                             // standing at (or rolling into) the platform
-      } else {
-        if (st && o > 0) missStation(false);             // already past the mark: on to the next stop
-        setState(sim.speed > 1 ? 'TRAVELING' : 'DEPARTING');
-      }
+      } else if (st && o > w[1]) missStation(false);     // already past the platform: on to the next stop
     }
   }
   syncButtons();

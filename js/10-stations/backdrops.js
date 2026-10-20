@@ -12,5 +12,5 @@ const BACKDROPS = {
   foteyabad: { layer: 'mid', sx: -5, y: 60, build: buildFoteyabad }, // Foteyabad's red-brick station
   cu: { layer: 'mid', sx: -100, y: 30, build: buildCU },            // the university station, far side
   sholoshahar: { layer: 'mid', sx: -5, y: 56, build: buildSholoshohor }, // the junction's station building and signal cabin
-  cantt: { layer: 'mid', sx: -460, y: 62, build: buildCantt },      // the army's yellow train and its guards
+  cantt: { layer: 'mid', sx: -460, y: 50, build: buildCantt },      // the army's yellow train and its guards
 };

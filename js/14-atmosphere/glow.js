@@ -56,8 +56,8 @@ function drawGlow(g) {
   }
   // headlight: a cone thrown forward and down onto the track. It needs the engine, works day or night
   // (a driver can switch it on in daylight; in WATCH it comes on by itself in the dark and in murk)
-  const murk = Math.max(weather.level, fog.level), beam = Math.max(n, drive.on ? 1 : 0.4 * murk);
-  if (beam > 0.02 && drive.engine !== 'OFF' && (drive.headlight || !drive.on)) {
+  const murk = Math.max(weather.level, fog.level), beam = drive.on ? 1 : Math.max(n, 0.7 * murk, 0.5);   // AUTO: the autopilot switches the headlight (autoLights) for darkness, rain and fog
+  if (beam > 0.02 && drive.engine !== 'OFF' && drive.headlight) {
     g.globalAlpha = Math.min(1, beam * (1 + 0.7 * murk));   // rain and fog catch the beam
     g.drawImage(GLOW.cone2, CONFIG.TRAIN_FRONT_X, LAYER_Y.loco - 2);
     g.drawImage(GLOW.cone, CONFIG.TRAIN_FRONT_X, LAYER_Y.loco);

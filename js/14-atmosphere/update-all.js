@@ -26,7 +26,7 @@ function update(dt) {
 
 // Now and then the driver sounds the horn passing a village
 function villageHorn(dt) {                             // (a driver blows their own horn)
-  if (sim.state !== 'TRAVELING' || sectionWeight('village', sim.dist) < 0.5) return;
+  if (drive.on || sim.state !== 'DRIVING' || sim.speed < 25 || sectionWeight('village', sim.dist) < 0.5) return;
   if ((sim.hornTimer -= dt) > 0) return;
   sim.hornTimer = 12 + sim.fxRng() * 14;
   playHorn(true);

@@ -2,41 +2,61 @@
 // js/10-stations/cantt.js
 // Defines: buildCantt
 
-// Cantonment, across the tracks: a long rake of faded yellow army coaches, no engine, waiting idle on
-// the line behind ours; long low white barracks with dark green roofs and rows of identical square
-// windows behind them; huge dome-shaped old rain trees; soldiers on the gravel; a solid steel buffer
-// stop at the end of the line, and next to it a sandbag sentry box with a camouflage tin roof and a
-// flag. Row 0 is screen y 70; screen x -460 is the left edge at the stop.
+// Cantonment, across the tracks. Reworked from the ground up so nothing stands on the yellow train any more:
+//   - the faded yellow, engine-less army rake waits on the line right behind ours, its roofs at screen y 89;
+//   - above it, 11 px clear of the roofs, a low whitewashed boundary wall and a mown lawn separate the railway from
+//     the station grounds (so the buildings and trees have their own ground, in plain view above the coaches);
+//   - on the lawn, behind a clipped hedge: the station building (porch, clock, name board, flag) in the middle,
+//     long white barracks to both sides, and the old rain trees with their trunks showing, standing in the gaps and
+//     at the ends, not in front of the building;
+//   - soldiers on the gravel by the rake, a steel buffer stop at the end of the line and a sandbag sentry box.
+// Sprite row 0 is screen y 50 (the sprite is drawn at y 50); screen x -460 is the left edge at the stop. The rows
+// from the gravel down are the old ones shifted by 20.
 function buildCantt(p, lit) {
-  const OFF = 460, W = 1140, H = 72, [c, g] = makeCanvas(W, H), L = x => x + OFF, rng = mulberry32(1971), END = L(262);
-  rect(g, 0, 22, END + 40, 36, p.green); ditherRect(g, 0, 22, END + 40, 36, p.grass, 5);      // the lawns behind: they run right down to the gravel, so the barracks stand on the ground
-  for (let y = 36; y < 58; y += 2) ditherRect(g, 0, y, END + 40, 1, p.greenDark, 3);          // mown stripes, a little darker towards the line
-  for (let x = 0; x < 40; x++) for (let y = 22; y < 58; y++) {                                  // the lawn thins out into the surrounding ground at both ends, so it never ends in a hard-edged slab
+  const OFF = 460, W = 1140, H = 82, [c, g] = makeCanvas(W, H), L = x => x + OFF, rng = mulberry32(1971), END = L(262);
+  const GB = 30, LAWN0 = 31, SC0 = L(150);                                                                   // ground row of the buildings and trees (screen 80), first lawn row
+  // --- the station grounds: a mown lawn from just under the buildings down to the boundary wall
+  const LAWN1 = 66;                                                                            // the lawn runs right down to the siding's gravel (row 66 = screen 116): the buildings stand on it, nothing floats
+  rect(g, 0, LAWN0, END + 40, LAWN1 - LAWN0, p.green); ditherRect(g, 0, LAWN0, END + 40, LAWN1 - LAWN0, p.grass, 5);
+  for (let y = LAWN0 + 1; y < LAWN1; y += 2) ditherRect(g, 0, y, END + 40, 1, p.greenDark, 3);   // mown stripes
+  rect(g, SC0 - 7, GB, 14, LAWN1 - GB, p.tan); ditherRect(g, SC0 - 7, GB, 14, LAWN1 - GB, p.brown, 5);   // the gravel path from the porch down to the line
+  rect(g, 0, LAWN0 - 3, END + 40, 3, p.greenDark); ditherRect(g, 0, LAWN0 - 4, END + 40, 1, p.green, 6);   // the back lawn in the buildings' shade
+  const SC = L(150);                                                                           // the station building stands centred on the platform
+  // --- far rank: smaller, darker rain trees between and behind the buildings (trunks hidden by the hedge)
+  for (let x = -440, i = 0; x <= 236; x += 52, i++)
+    rainTree(g, p, L(x + ((i * 17) % 23)), GB - 1, 20 + (i % 3) * 3, 15 + (i % 2) * 3, 300 + i * 11, GB - 6);
+  // --- the buildings, base on row GB
+  canttStationHouse(g, p, lit, SC - 78, GB, 156);
+  for (const [a, b] of [[-440, -250], [-232, -86]]) {                                          // long white barracks to the left of the station house (the lawn ends at the buffer stop on the right)
+    canttBarracksLong(g, p, lit, L(a), GB, b - a, 12);
+    hedgeRow(g, p, L(a) - 2, b - a + 4, GB + 3, 4);
+  }
+  hedgeRow(g, p, SC - 90, 180, GB + 3, 4);                                                    // a clipped hedge along the station house's feet, with a gap at the porch
+  rect(g, SC - 8, GB - 1, 16, 4, p.green); ditherRect(g, SC - 8, GB - 1, 16, 4, p.tan, 6);   // the gravel approach to the porch
+  // --- front rank: the great domed rain trees stand in the gaps and at the two ends, trunks planted on the lawn
+  const bigTree = (x, rw, rh, seed) => rainTree(g, p, L(x), GB + 5, rw, rh, seed, GB - 2);
+  for (const [x, rw, rh, seed] of [[-470, 34, 24, 500], [-170, 40, 26, 517], [-60, 26, 22, 534], [246, 24, 21, 551]])
+    bigTree(x, rw, rh, seed);
+  // --- shade trees and clipped shrubs dotted over the big lawn, so it reads as a kept garden, not a flat band
+  for (const [x, i] of [[-400, 0], [-300, 1], [-205, 2], [-110, 3], [-30, 4], [95, 5], [195, 6]]) {
+    if (Math.abs(x - 150) < 14) continue;
+    rainTree(g, p, L(x), 55 + (i % 2) * 3, 11 + (i % 3), 9, 700 + i * 13, 47 + (i % 2) * 3);
+  }
+  for (const x of [-350, -250, -160, -70, 40, 110, 230]) { rect(g, L(x) - 5, 59, 11, 4, p.greenDark); ditherRect(g, L(x) - 5, 59, 11, 3, p.green, 6); px(g, L(x) - 2, 59, p.red); px(g, L(x) + 2, 60, p.amber); }
+  // --- the boundary wall between the lawn and the railway, and the gate in it
+  canttLowWall(g, p, 0, END + 40, LAWN1, 4);                                                  // the low boundary wall along the siding
+  for (let x = 0; x < 40; x++) for (let y = 0; y < H; y++) {                                  // the whole lawn thins out into the surrounding ground at both ends
     if (bayer(x, y) < (40 - x) / 40 * 16) g.clearRect(x, y, 1, 1);
     if (bayer(END + 39 - x, y) < (40 - x) / 40 * 16) g.clearRect(END + 39 - x, y, 1, 1);
   }
-  for (let y = 22; y < 28; y++) for (let x = 40; x < END; x++) if (bayer(x, y) < (28 - y) / 6 * 12) g.clearRect(x, y, 1, 1);   // and softly along the top, where the hedges and trees hide it
-  for (const [a, b] of [[-440, -262], [-248, -70], [-56, 122], [136, 258]]) {                  // the barracks, high enough to show above the canopy roof
-    canttBarracksLong(g, p, lit, L(a), 22, b - a, 12);
-    hedgeRow(g, p, L(a) - 2, b - a + 4, 25, 4);                                                // a clipped hedge along their feet
-  }
-  for (let x = -420, i = 0; x <= 200; x += 110, i++)                                           // the old rain trees: huge neat domes
-    rainTree(g, p, L(x + (i % 2) * 8), 33, 40 + (i % 3) * 4, 24 + (i % 2) * 3, 500 + i * 17, 27);
-  g.translate(0, 8);                                                                           // everything below sits where it always did (sprite y is now 62)
+  g.translate(0, 20);                                                                          // everything below sits where it always did (the old sprite y of 62 is now 50)
   rect(g, 0, 48, END + 40, 12, p.gray);                                       // gravel bed, y 118..129
   ditherRect(g, 0, 46, END + 40, 2, p.gray, 8);
   for (let i = 0; i < END * 3; i++) px(g, randInt(rng, 0, END + 39), randInt(rng, 48, 59), rng() < 0.5 ? p.grayDark : rng() < 0.5 ? p.grayLight : p.brownDark);
   for (let x = 2; x < END; x += 8) { rect(g, x, 49, 4, 3, p.brown); px(g, x, 49, p.tan); }
   rect(g, 0, 49, END, 1, p.grayLight); rect(g, 0, 50, END, 1, p.grayDark);
 
-
-  const wheel = buildWheels(p)[0], yellow = { ...p, green: p.peach, greenDark: p.tan, cream: p.cream, red: p.orange };   // faded yellow
-  for (let i = 0; i < 14; i++) {                                              // fourteen faded yellow coaches, no locomotive
-    const x = L(-316) + i * 41;
-    g.drawImage(buildCar(yellow, lit, 40 + i), x, 19);
-    for (const wx of [5, 13, 25, 33]) g.drawImage(wheel, x + wx - 3, 42);
-    rect(g, x + 2, 41, 13, 1, p.gray); rect(g, x + 24, 41, 13, 1, p.gray);
-  }
+  // (the faded yellow army rake is gone: the siding stands empty, so nothing can look stacked on a train)
 
   // --- a solid steel buffer stop at the end of the line
   rect(g, END - 2, 50, 18, 3, p.cloudShade);
@@ -53,7 +73,7 @@ function buildCantt(p, lit) {
     fg.clearRect(0, 0, PERSON_W, PERSON_H); fg.save(); fg.translate(PERSON_W, 0); fg.scale(-1, 1); fg.drawImage(pc, 0, 0); fg.restore();
     g.drawImage(flip ? fc : pc, x - PERSON_CX, fy - PERSON_FY);
   };
-  for (let k = 0; k < 8; k++) soldier(L(-290 + k * 66 + Math.floor(rng() * 14)), rng() < 0.5);
+  for (let k = 0; k < 4; k++) soldier(L(-290 + k * 130 + Math.floor(rng() * 14)), rng() < 0.5);
 
   // --- the sentry box: sandbag walls (staggered courses), a camouflage tin roof, a flag nearby
   const sx = L(272);
@@ -70,7 +90,7 @@ function buildCantt(p, lit) {
   soldier(sx + 12, false, 53);
   rect(g, sx + 34, 22, 1, 31, p.grayLight);                                   // flagpole with a tiny red-and-green flag
   rect(g, sx + 35, 22, 10, 6, p.green); disc(g, sx + 39, 25, 2, p.red);
-  for (let x = 0; x < 30; x++) for (let y = 44; y < H; y++)                    // the gravel fades out at the right end
+  for (let x = 0; x < 30; x++) for (let y = 44; y < H - 20; y++)                    // the gravel fades out at the right end
     if (bayer(END + 40 - 1 - x, y) < (30 - x) / 30 * 16) g.clearRect(END + 40 - 1 - x, y, 1, 1);
   return c;
 }

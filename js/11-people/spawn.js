@@ -22,19 +22,10 @@ function populateStation(st) {
   const rng = mulberry32((Math.random() * 1e9) | 0);    // a different crowd every trip
   const [L, R] = st.platform;
   const seated = kind => { const d = makeDesign(rng, kind); d.carry = null; return d; };
-  const locals = st.extras.includes('locals');                       // a couple of locals in lungis or casual shirts, no luggage
-  const localDesign = r => studentDesign(r);                         // every passenger is a student
   const waiting = Array.isArray(st.crowd) ? st.crowd[0] + Math.floor(rng() * (st.crowd[1] - st.crowd[0] + 1)) : st.crowd;
-  const studentDesign = r => {                           // CU students: trousers and kameez, nearly all with a backpack or bag
-    const d = makeDesign(r, r() < 0.55 ? 'trousers' : 'kameez');
-    d.carry = d.kind === 'trousers' ? (r() < 0.82 ? 'backpack' : 'bag') : (r() < 0.55 ? 'bag' : 'backpack');
-    return d;
-  };
-  const villageMix = () => { const r = rng(); return r < 0.4 ? studentDesign(rng) : r < 0.58 ? studentDesign(rng) : localDesign(rng); };   // students in kameez and trousers, elders, villagers in lungis
-  let vi = 0;
-  const villageDesign = () => { const i = vi++; return i < 2 ? studentDesign(rng) : localDesign(rng); };   // a couple of students, an elder with a cane, mostly lungi-clad locals
+  const studentDesign = r => makeStudentDesign(r);        // ONLY students board this train: trousers or kameez, nearly all with a backpack or bag
   for (let i = 0; i < waiting; i++) {                  // waiting to board, spread along the train
-    const q = spawnPerson(st, st.village ? villageDesign() : st.villagers ? villageMix() : locals ? localDesign(rng) : st.students && rng() < (st.studentShare || 1) ? studentDesign(rng) : makeDesign(rng),
+    const q = spawnPerson(st, studentDesign(rng),
                 st.village ? 226 + (rng() * 2 - 1) * 34 :           // quietly gathered on the dirt path under the shelter
                 st.shade && rng() < 0.6 ? Math.max(24, Math.min(268, pick(rng, st.shade) + (rng() * 2 - 1) * 26)) : 24 + rng() * 244,   // some stand in the trees' shade, the rest in the open sun
                 st.edgeCrowd && rng() < 0.4 ? PLAT.WALK_MIN + Math.floor(rng() * 4) : randWalkY(rng, st.tight), rng() < 0.5 ? 1 : -1, 'wait');

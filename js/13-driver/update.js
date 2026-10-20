@@ -10,19 +10,20 @@
 function updateDrive(dt) {
   const D = CONFIG.DRIVE;
   drive.tripT += dt;
+  if (!drive.on) autopilot(dt);                         // AUTO: the autopilot works the handles, everything below is identical
   drive.lever = drive.brake > 0 ? -drive.brake : drive.throttle;
   if (Math.abs(drive.vel) !== sim.speed) drive.vel = (drive.vel < 0 ? -1 : 1) * sim.speed;   // arrive() and friends set sim.speed directly
   const v = drive.vel, av = sim.speed;
   if (sim.state === 'STOPPED') updateStop(dt);
   const boarding = sim.state === 'STOPPED' && (sim.stopPhase === 'SETTLE' || sim.stopPhase === 'DOORS_OPEN' || sim.stopPhase === 'BOARDING');   // no pulling out mid-boarding
   const power = drive.lever > 0 && drive.engine === 'ON' && !boarding && !ui.complete ? drive.lever / D.NOTCHES : 0;
-  updateSlack(dt);
+  if (drive.on) updateSlack(dt);                        // (the autopilot always pauses between power and brake: no coupler bang)
   updateSlip(dt, power);
   let trac = Math.min(power, Math.max(0, (drive.rpm - 0.3) / 0.7)) * D.ACCEL * Math.min(1, D.KNEE / Math.max(av, 1));
   if (drive.slip) trac *= D.SLIP_TRAC;                  // the wheels spin, the train hardly moves
   if (sim.state === 'STOPPED') {
     drive.accel = 0;
-    if (trac <= 0 || !depart()) return;
+    if (!drive.on || trac <= 0 || !depart()) return;    // AUTO leaves via the stop routine (stop.js), not through here
   }
   // air brakes: the command takes a moment to travel down the pipe, then the pressure builds (or bleeds off) slowly
   const cmd = drive.lever === EB ? D.EMERGENCY : drive.lever < 0 ? -drive.lever * D.BRAKE : 0;
@@ -78,14 +79,14 @@ function checkArrival() {                              // doors never close, so 
   const st = STATIONS[sim.station + 1];
   if (!st || sim.speed > 0.3) return;
   const o = sim.dist - st.dist, w = stopWindow(st);
-  if (o < w[0] || o > w[1]) return;
+  if (o < w[0] || o > w[1] + (drive.on ? 0 : 36)) return;   // (the autopilot is let off if it stops a touch long)
   arrive(st.index, o);
-  scoreArrival(st.index, o);
+  if (drive.on) scoreArrival(st.index, o);
 }
 
 function checkSpeed(dt) {
   drive.limit = speedLimitAt(sim.dist);
-  const over = sim.speed > drive.limit + 3;
+  const over = drive.on && sim.speed > drive.limit + 3;   // (the autopilot keeps itself under the limit)
   if (over && !drive.over) toast('OVERSPEED! LIMIT ' + drive.limit, 'red');
   drive.over = over;
   if (!over) return;
@@ -98,7 +99,7 @@ function checkLine() {
   const st = STATIONS[sim.station + 1];
   if (!st) return;
   const o = sim.dist - st.dist;
-  if (st.index !== LAST_STATION) { if (o > stopWindow(st)[1] + 40) missStation(true); return; }
+  if (st.index !== LAST_STATION) { if (o > stopWindow(st)[1] + (drive.on ? 40 : 70)) missStation(drive.on); return; }
   if (o < BUFFER_O) return;
   const hard = sim.speed > 12, bump = sim.speed > 3;
   sim.dist = st.dist + BUFFER_O;

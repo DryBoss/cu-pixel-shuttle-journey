@@ -16,7 +16,7 @@ function updateStop(dt) {
       startBoarding(st); setStopPhase('BOARDING');
       break;
     case 'BOARDING':
-      if ((sim.phaseT > 1 && boardingDone(st)) || sim.phaseT >= CONFIG.BOARD_TIMEOUT) setStopPhase(terminus ? 'PARKED' : 'WAIT');
+      if ((sim.phaseT > 1 && boardingDone(st)) || sim.phaseT >= (terminus ? CONFIG.BOARD_TIMEOUT * 2.5 : CONFIG.BOARD_TIMEOUT)) setStopPhase(terminus ? 'PARKED' : 'WAIT');
       break;
     case 'BOARDED':                                       // the driver closes the doors
       if (auto) setStopPhase('DOORS_CLOSE');
@@ -38,7 +38,7 @@ function updateStop(dt) {
       if (auto) { setStopPhase('HORN'); playHorn(false); }
       break;
     case 'HORN':
-      if (sim.phaseT >= CONFIG.HORN_TIME) setState('DEPARTING');
+      if (sim.phaseT >= CONFIG.HORN_TIME) { setState('DRIVING'); sim.shake = Math.max(sim.shake, 1.2); }   // AUTO pulls out: the autopilot opens the power
       break;
     case 'PARKED':                                        // the driver shuts the engine down
       if (auto || drive.engine === 'OFF') setStopPhase('TERMINUS');

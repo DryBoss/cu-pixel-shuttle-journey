@@ -8,7 +8,7 @@
 // the hazy hills of the far layer. (Screen x -100 is the sprite's left edge at the stop; the ground is row 98 =
 // screen y 128.) The yard, buffer stop, stalls and people are drawn in front.
 function buildCU(p, lit) {
-  const W = 520, H = 112, [c, g] = makeCanvas(W, H), rng = mulberry32(73), base = 98, GX = 216, GW = 92;   // the gate spans sprite x 216..308
+  const W = 520, H = 112, [c, g] = makeCanvas(W, H), rng = mulberry32(73), base = 98, GX = 216, GW = 124;   // the gate spans sprite x 216..340
   const kinds = ['copy', 'food', 'tin', 'mobile', 'book'];
   rect(g, 0, base, W, H - base, p.brownDark);                                              // trodden ground
   for (let i = 0; i < W * 3; i++) px(g, randInt(rng, 0, W - 1), randInt(rng, base, H - 1), rng() < 0.4 ? p.brown : rng() < 0.5 ? p.tan : p.grayDark);
@@ -20,17 +20,41 @@ function buildCU(p, lit) {
     else burgShop(g, p, lit, x, base - 2, w, kinds[Math.floor(rng() * kinds.length)], seed, randInt(rng, 13, 18));
     x += w + randInt(rng, 0, 2);
   }
-  const pil = x0 => {                                                                      // a brick gate pillar with a white cap and a lamp
-    rect(g, x0, base - 40, 10, 40, p.rust); rect(g, x0, base - 40, 1, 40, p.orange); rect(g, x0 + 9, base - 40, 1, 40, p.brownDark);
-    for (let y = base - 38; y < base; y += 3) rect(g, x0, y, 10, 1, p.brownDark);
-    rect(g, x0 - 2, base - 43, 14, 3, p.white); rect(g, x0 - 2, base - 41, 14, 1, p.cloudShade);
-    rect(g, x0 + 4, base - 47, 2, 4, p.grayDark); rect(g, x0 + 3, base - 49, 4, 2, lit ? PALETTE.glow : p.cream);
-    rect(g, x0 - 2, base - 3, 14, 3, p.cloudShade);
-  };
-  pil(GX); pil(GX + GW - 10);
-  rect(g, GX + 10, base - 36, GW - 20, 14, p.greenDark); rect(g, GX + 10, base - 36, GW - 20, 1, p.glow); rect(g, GX + 10, base - 23, GW - 20, 1, p.glow);   // the arch sign
-  drawText2x(g, 'CU', GX + (GW >> 1) - 8, base - 34, p.white);
-  rect(g, GX + 10, base - 44, GW - 20, 8, p.white); drawText(g, 'UNIVERSITY', GX + (GW >> 1) - 19, base - 42, p.greenDark);
+  // The university's main gate, as photographed: one pale-ochre concrete portal. A low left pylon with a round clock
+  // and a pedestrian passage through it; a thick flat roof-beam spanning the whole road, its underside cut with a
+  // row of rectangular skylight slots and the name "UNIVERSITY OF CHITTAGONG" in dark capitals on its face; a tall
+  // massive right pylon with a round cut-out high in its corner, a black panel with the crest and Bangla name, and a
+  // pinkish stone base. The road passes open between them.
+  const ochre = p.cream, shade = p.tan, hi = p.peach;
+  const slab = (x0, y0, w, h) => { rect(g, x0, y0, w, h, ochre); rect(g, x0, y0, w, 1, hi); rect(g, x0 + w - 1, y0, 1, h, shade); ditherRect(g, x0, y0, w, h, shade, 1); };
+  const LX = GX, LW = 28, RW = 24, RX = GX + GW - RW, TOP = base - 52, BEAM = 11;
+  // open road and the green campus beyond, between the pylons
+  rect(g, LX + LW, base - 40, RX - LX - LW, 40, lit ? p.indigo : p.skyLight);
+  ditherRect(g, LX + LW, base - 28, RX - LX - LW, 23, p.green, 7);
+  ditherRect(g, LX + LW, base - 16, RX - LX - LW, 11, p.greenDark, 8);
+  // left pylon: a block with the clock, and the pedestrian passage below it
+  slab(LX, base - 40, LW, 40);
+  rect(g, LX + 6, base - 24, 11, 24, p.brownDark); rect(g, LX + 7, base - 23, 9, 23, lit ? p.indigo : p.haze);   // the passage
+  disc(g, LX + 14, base - 32, 4, p.grayDark); disc(g, LX + 14, base - 32, 3, p.white);                          // the round clock
+  rect(g, LX + 14, base - 34, 1, 3, p.ink); rect(g, LX + 14, base - 32, 2, 1, p.ink);
+  rect(g, LX + LW - 6, base - 21, 6, 17, p.ink); rect(g, LX + LW - 5, base - 20, 4, 4, p.grayDark);              // the dark signboard on its side
+  rect(g, LX, base - 4, LW, 4, p.rose); ditherRect(g, LX, base - 4, LW, 4, p.brown, 5);                         // pinkish base
+  // right pylon: tall, massive
+  slab(RX, TOP, RW, 52);
+  disc(g, RX + 5, TOP + 11, 5, p.skyMid); ditherRect(g, RX, TOP + 4, 10, 15, p.green, 8);                      // the round cut-out
+  rect(g, RX + 5, TOP + 22, 15, 22, p.ink); rect(g, RX + 5, TOP + 22, 15, 1, p.grayDark);                      // the black panel
+  disc(g, RX + 12, TOP + 27, 2, p.grayLight); rect(g, RX + 7, TOP + 32, 11, 1, p.grayLight); rect(g, RX + 7, TOP + 34, 9, 1, p.grayLight);
+  rect(g, RX + 8, TOP + 38, 8, 2, p.gray);                                                                     // the small plaque
+  rect(g, RX, base - 8, RW, 8, p.rose); ditherRect(g, RX, base - 8, RW, 8, p.brown, 5);                         // pinkish stone base
+  // the roof-beam across the road: thick, flat, slotted underneath
+  const BY = TOP + 1;
+  slab(LX, BY, GW, BEAM);
+  rect(g, LX, BY + BEAM - 2, GW, 2, shade);
+  for (let sx = LX + 34; sx + 6 <= RX - 4; sx += 11) { rect(g, sx, BY + BEAM - 2, 6, 2, p.white); }             // light slots in the underside
+  const nm = 'UNIVERSITY OF CHITTAGONG';
+  drawText(g, nm, LX + 3, BY + 3, p.grayDark);
+  rect(g, LX + 2, BY - 3, 8, 3, shade); rect(g, LX + 4, BY - 5, 4, 2, p.grayDark);                              // a floodlight on the beam
+  rect(g, RX - 2, base - 6, 2, 0, p.ink);
   for (const wx of [GX - 40, GX + GW + 4]) { posterFence(g, p, wx, base, 36, wx + 11); }   // posters on the walls either side
   return c;
 }
