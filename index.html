@@ -14,12 +14,82 @@
 </div>
 <div id="bar" role="toolbar" aria-label="Train controls">
   <button id="b-mode" type="button" aria-label="Driver mode" title="Drive the train yourself (C)"><svg viewBox="0 0 16 16"><path d="M5 2h6v1h2v2h1v6h-1v2h-2v1H5v-1H3v-2H2V5h1V3h2zM6 4H5v1H4v6h1v1h6v-1h1V5h-1V4zM7 4h2v3H7zM7 7h2v2H7zM4 7h3v1H4zM9 7h3v1H9zM7 9h2v3H7z"/></svg><span>AUTO</span></button>
+  <button id="b-manual" type="button" class="drv" aria-label="Driver's manual" title="Driver's manual (K)"><svg viewBox="0 0 16 16"><path d="M2 2h5v1h1v11H7v-1H2zM9 3h1V2h5v11H9v1H8V3zM3 3v9h4V4H3zm7 0v9h4V3z" fill-rule="evenodd"/></svg><span>BOOK</span></button>
   <button id="b-pause" type="button" aria-label="Pause" title="Pause (P)"><svg viewBox="0 0 16 16"></svg><span>PAUSE</span></button>
   <button id="b-speed" type="button" class="big aut" aria-label="Speed 1x" title="Speed (1 / 2 / 4)">1x</button>
   <button id="b-skip" type="button" class="aut" aria-label="Skip to next station" title="Next station (N)"><svg viewBox="0 0 16 16"><path d="M3 3h2v1h2v1h2v1h1v1h1v2h-1v1h-1v1H7v1H5v1H3zM12 3h2v10h-2z"/></svg><span>NEXT</span></button>
   <button id="b-time" type="button" class="aut" aria-label="Time of day" title="Time of day (T)"><svg viewBox="0 0 16 16"></svg><span>AUTO</span></button>
   <button id="b-season" type="button" class="aut" aria-label="Season" title="Season (W)"><svg viewBox="0 0 16 16"></svg><span>AUTO</span></button>
   <button id="b-mute" type="button" aria-label="Sound" title="Sound (M)"><svg viewBox="0 0 16 16"></svg><span>TAP</span></button>
+</div>
+<div id="manual" hidden role="dialog" aria-modal="true" aria-label="Driver's manual">
+  <div class="paper">
+    <button id="manual-x" type="button" aria-label="Close the manual">&times;</button>
+    <h1>CU SHUTTLE &mdash; DRIVER'S MANUAL</h1>
+    <p class="sub">Chittagong University shuttle &middot; Bottoli to CU &middot; 9 stops</p>
+
+    <h2>1. YOUR JOB</h2>
+    <p>Take the students from Bottoli to the university. Stop at every platform, wait while they climb aboard, leave on the guard's flag, keep to the timetable and the speed limits, and bring everyone in smoothly. Nobody gets off on the way: at CU <b>everyone</b> gets off.</p>
+
+    <h2>2. CONTROLS</h2>
+    <table>
+      <tr><td><b>E</b></td><td>Engine start / stop (crank takes a couple of seconds). Throttle must be at 0 to start.</td></tr>
+      <tr><td><b>W / &uarr;</b> &nbsp; <b>S / &darr;</b></td><td>Throttle handle up / down: notches 0&ndash;8.</td></tr>
+      <tr><td><b>D / &rarr;</b> &nbsp; <b>A / &larr;</b></td><td>Brake handle on / off: steps REL, 1, 2, 3, 4.</td></tr>
+      <tr><td><b>B</b></td><td>EMERGENCY brake. Hard on the passengers. Use it only to avoid trouble.</td></tr>
+      <tr><td><b>H</b> (hold)</td><td>Horn.</td></tr>
+      <tr><td><b>L</b></td><td>Headlight. Switch it on at night and in rain.</td></tr>
+      <tr><td><b>P / Space</b></td><td>Pause. <b>K</b> opens this book. <b>C</b> hands the train to the autopilot.</td></tr>
+    </table>
+    <p>On a phone or tablet, tap the POWER and BRAKE levers, ENGINE, LIGHT and HORN on the cab panel (hold a lever to keep stepping, hold HORN to sound it).</p>
+
+    <h2>3. GETTING AWAY</h2>
+    <ol>
+      <li>Start the engine and wait for the lamp to turn green.</li>
+      <li>Release the brake (REL). The air takes a moment to bleed off.</li>
+      <li>Wait for the guard's flag (the FLAG lamp). Leaving early costs points, and so does leaving anyone waiting on the platform.</li>
+      <li>Open the throttle <b>gently</b>. The wheels slip if you give too much power at low speed: above notch 7 on dry rails, above notch 5 on wet rails (Monsoon). If the SLIP lamp lights, drop to notch 3 (2 when wet) until they grip.</li>
+    </ol>
+
+    <h2>4. ON THE LINE</h2>
+    <ul>
+      <li>The train is heavy. It is slow to pick up speed and it coasts for minutes, so plan well ahead.</li>
+      <li><b>Speed limits:</b> 100 on the open line, 80 in the hills, 60 over bridges and near stations, 50 on the climb into CU. Going over the limit costs points. The SPEED lamp flashes.</li>
+      <li><b>Air brakes lag.</b> Nothing happens for about a second after you apply them, they build up slowly, and they release slowly. Start braking early and in steps, roughly half a kilometre before a platform when running at full speed.</li>
+      <li><b>Coupler slack:</b> never slam from heavy power straight to heavy brake (or back). Pass through notch 0 and pause for about a second.</li>
+      <li><b>The grade:</b> the last climb to CU drags the train back (GRADE lamp). Keep power on and hold your speed.</li>
+      <li>Jerky speed changes, wheel slip and slack bangs all use up the <b>comfort</b> meter.</li>
+    </ul>
+
+    <h2>5. STOPPING AT A PLATFORM</h2>
+    <p>Bring the train to a halt with the cab alongside the platform mark. Stopping anywhere inside the platform window counts, and the nearer the mark the better. Once you stand still the students board. Hold the brake until the FLAG lamp lights, then go. At CU, stop before the buffers: hitting them is a big penalty.</p>
+
+    <h2>6. POINTS</h2>
+    <table class="pts">
+      <tr><th colspan="2">Stopping</th></tr>
+      <tr><td>Within 3 m of the mark</td><td>PERFECT +500</td></tr>
+      <tr><td>Within 10 m</td><td>GREAT +300</td></tr>
+      <tr><td>Within 25 m</td><td>GOOD +150</td></tr>
+      <tr><td>Anywhere else in the window</td><td>+50</td></tr>
+      <tr><th colspan="2">Timetable</th></tr>
+      <tr><td>Arrive on time (&plusmn;8 game minutes) or early</td><td>+200</td></tr>
+      <tr><td>Late</td><td>200 &minus; 6 per minute beyond that, down to &minus;200</td></tr>
+      <tr><th colspan="2">Passengers &amp; comfort</th></tr>
+      <tr><td>Each student who boards or gets off</td><td>+10</td></tr>
+      <tr><td>Comfort meter (starts at 100)</td><td>&times;4 at the end</td></tr>
+      <tr><th colspan="2">Penalties</th></tr>
+      <tr><td>Missed a station</td><td>&minus;400</td></tr>
+      <tr><td>Left students waiting</td><td>&minus;40 each</td></tr>
+      <tr><td>Left before the flag</td><td>&minus;150</td></tr>
+      <tr><td>Hit the buffers at CU</td><td>&minus;300 and comfort drops</td></tr>
+      <tr><td>Over the limit by more than 3</td><td>&minus;20 per second</td></tr>
+    </table>
+    <p><b>Stars</b> at the end of the run: 1 star for about 270 points per station, 2 for about 500, 3 for about 720 (nine stations). Your best score is saved on this device.</p>
+
+    <h2>7. THE AUTOPILOT</h2>
+    <p>Press C (or the DRIVE button) to hand over. It drives with the same physics: it respects the limits, brakes in good time, stops at each platform, and works the headlight for you. Take back the controls any time.</p>
+    <p class="foot">Press K or Esc to close &middot; the train is paused while you read.</p>
+  </div>
 </div>
 <!-- Scripts share ONE global scope and run in this order. See README.md before reordering. -->
 <!-- 01-config : configuration, route, palette -->
@@ -210,6 +280,7 @@
 <script src="js/17-input/route-map.js"></script>
 <script src="js/17-input/buttons.js"></script>
 <script src="js/17-input/actions.js"></script>
+<script src="js/17-input/manual.js"></script>
 <script src="js/17-input/keyboard.js"></script>
 <script src="js/17-input/pointer.js"></script>
 <!-- 18-main : render, prefetch, cab, fit, main loop -->

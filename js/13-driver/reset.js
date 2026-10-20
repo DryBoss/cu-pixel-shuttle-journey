@@ -29,6 +29,7 @@ function setDriveMode(on) {
   } else {
     hornOff();
     if (drive.engine === 'OFF' || drive.engine === 'SHUTDOWN') startEngine();
+    closeManual();
     auto.tick = 0; auto.n = drive.brake;                // the autopilot picks up wherever the driver left the train
     if (sim.state === 'DRIVING') {
       const st = STATIONS[sim.station + 1], o = st ? sim.dist - st.dist : 0, w = st && stopWindow(st);

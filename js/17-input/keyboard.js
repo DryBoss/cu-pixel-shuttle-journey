@@ -20,6 +20,7 @@ function driveKey(key) {
     case 'ArrowLeft': case 'KeyA': setBrake(drive.brake - 1); break;
     case 'KeyB': setBrake(5); break;                                                    // emergency
     case 'KeyL': toggleLight(); break;
+    case 'KeyK': toggleManual(); break;                  // the driver's manual
     case 'KeyH': break;                                  // held: see keydown
     default: return false;
   }
@@ -28,6 +29,10 @@ function driveKey(key) {
 addEventListener('keydown', e => {
   unlockAudio();
   const key = e.code;
+  if (manual.open) {                                     // the manual is open: only close it (the paper scrolls with the arrow keys / wheel)
+    if (key === 'Escape' || key === 'KeyK') { closeManual(); e.preventDefault(); }
+    return;
+  }
   if (key === 'KeyF') input.fast = true;
   if (key === 'KeyH' && drive.on && !ui.title && !ui.paused) hornOn();
   if (e.repeat) { if (key === 'Space' || key.startsWith('Arrow')) e.preventDefault(); return; }
